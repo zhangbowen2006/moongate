@@ -119,7 +119,7 @@ node bin/moongate.mjs check --policy examples/policy.workspace.json
 - 审批摘要基于替换前的参数（只含占位符），审批人看不到明文；账本只记录替换次数与 `reveal_rule`。
 - 服务端 guard 没有 vault：遇到占位符直接 `unresolved-secret` 拒绝。
 
-注意：`reveal` 是按目的地授权的。把 `**/internal/**` 写成 `**` 等于对所有外发工具开放真值；`airlock check` 不会阻止这种写法，因为它是策略意图，不是语法错误。
+注意：`reveal` 是按目的地授权的。把 `**/internal/**` 写成 `**` 等于对所有外发工具开放真值；`moongate check` 不会阻止这种写法，因为它是策略意图，不是语法错误。
 
 ## 能力裁剪
 
