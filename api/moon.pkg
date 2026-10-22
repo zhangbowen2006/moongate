@@ -1,0 +1,23 @@
+import {
+  "zhangbowen2006/airlock",
+}
+
+options(
+  link: {
+    "js": {
+      "exports": [
+        "create",
+        "client_line",
+        "server_line",
+        "resolve_approval",
+        "close",
+        "tick",
+        "verify",
+        "report",
+        "inspect",
+        "version",
+      ],
+      "format": "esm",
+    },
+  },
+)

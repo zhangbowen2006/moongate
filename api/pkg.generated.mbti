@@ -1,0 +1,31 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "zhangbowen2006/airlock/api"
+
+// Values
+pub fn client_line(Int32, String, Int64) -> String
+
+pub fn close(Int32, Int64) -> String
+
+pub fn create(String, String, Int64) -> String
+
+pub fn inspect(String) -> String
+
+pub fn report(String) -> String
+
+pub fn resolve_approval(Int32, String, Bool, Int64) -> String
+
+pub fn server_line(Int32, String, Int64) -> String
+
+pub fn tick(Int32, Int64) -> String
+
+pub fn verify(String) -> String
+
+pub fn version() -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
