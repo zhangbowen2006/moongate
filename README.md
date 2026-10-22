@@ -111,7 +111,7 @@ node --test test/*.test.mjs # 9 个进程级测试
 ## 作为 MoonBit 库使用
 
 ```sh
-moon add zhangbowen2006/moongate@0.3.0
+moon add zhangbowen2006/moongate@0.4.0
 ```
 
 ```moonbit
@@ -217,7 +217,7 @@ hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 - `moon test --deny-warn`：38 个单元测试（策略顺序、血缘误报、路径规范化、guard、替身替换、审批一次性、账本篡改）
 - `node --test`：9 个真实进程测试（脱敏、按目的地替换、路径穿越、绕过网关、失败关闭、篡改、报告）
 - `interop/`：官方 SDK 客户端 + 官方 filesystem 服务端，4/4 通过
-- Mooncakes：`moon add zhangbowen2006/moongate@0.3.0`，已在空工程中安装并调用 `guard_decision` 验证
+- Mooncakes：`moon add zhangbowen2006/moongate@0.4.0`，已在空工程中安装并调用 `guard_decision` 验证
 - CI：Linux / macOS / Windows 三平台，含演示与互操作
 
 ## 边界
