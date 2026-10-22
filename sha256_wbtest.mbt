@@ -16,7 +16,7 @@ test "sha256 matches the FIPS 180-4 test vectors" {
 
 ///|
 test "sha256 handles multi-byte text and long input" {
-  let long = "airlock".repeat(100)
+  let long = "moongate".repeat(100)
   // Same input hashes identically regardless of the surrounding code path.
   inspect(sha256_hex(long).length(), content="64")
   inspect(sha256_hex("密钥"), content=sha256_hex("密钥"))
