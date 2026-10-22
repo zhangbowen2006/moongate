@@ -103,7 +103,7 @@ The guard enforces hard denials only. `approval` is returned as `allow`, because
 ## Mooncakes
 
 ```sh
-moon add zhangbowen2006/moongate@0.6.0
+moon add zhangbowen2006/moongate@0.6.1
 ```
 
 Use `parse_policy`, `guard_decision`, `new_session`, `client_line`, `server_line`, `resolve_approval`, `verify_ledger`.

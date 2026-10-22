@@ -9,9 +9,16 @@
 /// This is lexical only: it does not touch the filesystem, resolve symlinks, or
 /// decode percent escapes. Symlink escape remains a limitation and is listed in
 /// `docs/SEMANTICS.md`.
+fn is_drive_letter(ch : UInt16) -> Bool {
+  (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122)
+}
+
+///|
 pub fn normalize_path(input : String) -> String {
   let slashed = input.replace_all(old="\\", new="/")
-  let drive = if slashed.length() >= 2 && slashed[1] == ':' {
+  let drive = if slashed.length() >= 2 &&
+    slashed[1] == ':' &&
+    is_drive_letter(slashed[0]) {
     slashed[0:2].to_owned()
   } else {
     ""

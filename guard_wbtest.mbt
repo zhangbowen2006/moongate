@@ -7,6 +7,9 @@ test "paths are normalized lexically before matching" {
   inspect(normalize_path("a/b/../c"), content="a/c")
   inspect(normalize_path(".."), content="..")
   inspect(normalize_path("."), content="")
+  // Drive roots cannot be escaped by `..`, and only A-Z prefixes are drives.
+  inspect(normalize_path("C:/foo/../../secret"), content="C:/secret")
+  inspect(normalize_path("1:/a/../.."), content="")
 }
 
 ///|

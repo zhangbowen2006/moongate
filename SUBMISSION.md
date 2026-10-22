@@ -53,6 +53,6 @@
 ## 仓库与安装
 
 - GitHub：https://github.com/zhangbowen2006/moongate
-- Mooncakes：`moon add zhangbowen2006/moongate@0.6.0`
+- Mooncakes：`moon add zhangbowen2006/moongate@0.6.1`
 - 运行演示：`node demo/run.mjs`
 - 验证账本：`node bin/moongate.mjs verify --ledger runs/demo.jsonl`

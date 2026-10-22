@@ -99,7 +99,7 @@ node scripts/build.mjs
 模块名：`zhangbowen2006/moongate`
 
 ```sh
-moon add zhangbowen2006/moongate@0.6.0
+moon add zhangbowen2006/moongate@0.6.1
 ```
 
 包内可直接使用 `parse_policy`、`guard_decision`、`new_session`、`client_line`、`server_line`、`resolve_approval`、`verify_ledger`、`report_ledger`。发布版本与仓库 tag 对齐。
