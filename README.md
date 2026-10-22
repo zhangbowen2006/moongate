@@ -1,5 +1,6 @@
 # MoonGate（月门）
 
+[![CI](https://github.com/zhangbowen2006/moongate/actions/workflows/ci.yml/badge.svg)](https://github.com/zhangbowen2006/moongate/actions/workflows/ci.yml)
 [![Mooncakes](https://img.shields.io/badge/mooncakes-zhangbowen2006%2Fmoongate-dfed86)](https://mooncakes.io/docs/zhangbowen2006/moongate)
 
 **MCP 工具的双点执行边界。** 同一套 MoonBit 判定核心，既跑在网关进程里，也能被 MCP 服务端直接嵌入：网关被绕过时，服务端自己仍然会拒绝。
