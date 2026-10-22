@@ -12,7 +12,7 @@
 
 **上一版**：输入是一份 JSONL 观察记录，引擎对记录逐条打分，输出报告。记录是事先准备的，引擎与真实调用链没有任何连接。
 
-**这一版**：Airlock 是真实进程，位于 Agent 客户端与 MCP 服务端之间。它从两个管道实时读取协议消息，判定后才决定是否转发。
+**这一版**：MoonGate 是真实进程，位于 Agent 客户端与 MCP 服务端之间。它从两个管道实时读取协议消息，判定后才决定是否转发。
 
 证据：
 
@@ -37,7 +37,7 @@ node demo/run.mjs
 证据：
 
 ```sh
-node bin/airlock.mjs verify --ledger runs/demo.jsonl
+node bin/moongate.mjs verify --ledger runs/demo.jsonl
 # chain intact: N entries, head ...
 ```
 
@@ -49,7 +49,7 @@ node bin/airlock.mjs verify --ledger runs/demo.jsonl
 
 **(a) 真实副作用**：被拒绝的外发调用，接收端 HTTP 计数必须为 0；被拒绝的写调用，文件内容必须保持不变；被批准的写调用，文件必须出现。这些都在 `demo/run.mjs` 中断言，失败即退出码 1。
 
-**(b) 第三方互操作**：`interop/` 使用官方 `@modelcontextprotocol/sdk` 作为客户端、官方 `@modelcontextprotocol/server-filesystem` 作为服务端，Airlock 夹在中间。两端都是别人写的包，网关对它们完全透明。
+**(b) 第三方互操作**：`interop/` 使用官方 `@modelcontextprotocol/sdk` 作为客户端、官方 `@modelcontextprotocol/server-filesystem` 作为服务端，MoonGate 夹在中间。两端都是别人写的包，网关对它们完全透明。
 
 ```sh
 cd interop && npm install && node client.mjs
@@ -60,7 +60,7 @@ cd interop && npm install && node client.mjs
 # - 被禁用的写工具无法执行，文件不存在
 ```
 
-**(c) 真实模型入口**：`demo/agent-llm.mjs` 用 OpenAI 兼容接口驱动模型自行选择工具。设置 `AIRLOCK_LLM_API_KEY` 后即可运行；没有密钥时，确定性客户端覆盖同样的协议路径。
+**(c) 真实模型入口**：`demo/agent-llm.mjs` 用 OpenAI 兼容接口驱动模型自行选择工具。设置 `MOONGATE_LLM_API_KEY` 后即可运行；没有密钥时，确定性客户端覆盖同样的协议路径。
 
 ## 4. “现有成果偏向规则检测与测试框架”
 
@@ -84,25 +84,33 @@ cd interop && npm install && node client.mjs
 
 ## 5. “实际应用价值及相较现有方案的创新优势尚不充分”
 
-**实际价值**：任何 MCP 客户端都能接入，改动只是把配置里的启动命令换成 `airlock run ... -- <原命令>`。适合的场景很具体：把本地文件、数据库、内网接口交给 Agent，但不想让它把读到的凭据发出去，也不想让删除、转账这类动作无人确认就执行。
+这一条要先承认一个事实：**MCP 策略网关在 2026 年已经不是空白**。MCP Shield、MCPKernel/MCPGuard、mcp-firewall、taintMCP 都提供策略、审批、污点追踪和哈希链审计；AgentPerms 甚至已经做了“录制真实会话后推断最小权限”。如果只是再实现一遍这些功能，确实没有充足理由通过。
 
-**与常见方案的差别**（诚实对比）：
+所以这一版把重点放在一个它们都没有的部署性质上：**两个独立执行点**。
 
-| 常见做法 | 通常做到 | Airlock 的不同 |
+- 这些方案都是一个代理进程。代理被绕过——客户端直连服务端、服务端被别的进程调用、配置写错——保护就结束。
+- MoonGate 把同一份 MoonBit 策略编译进服务端，在工具函数执行前再判一次。演示第 9 步直接绕过网关连服务端，`fs.delete` 和 `reports/../../etc/passwd` 仍被拒绝。
+- 网关负责有状态的部分（跨调用血缘、审批、账本），guard 负责无状态的硬规则。职责不重叠。
+
+**与常见方案的差别**：
+
+| 常见做法 | 通常做到 | MoonGate 的不同 |
 | --- | --- | --- |
-| MCP 代理/网关 | 认证、路由、日志、工具白名单 | 判定在转发前完成；拒绝意味着上游没有执行 |
+| MCP 代理/网关 | 判定在转发前，但只在一个进程里 | 同一份策略在网关与服务端两处执行 |
 | 提示词约束 | 让模型“不要外发密钥” | 不依赖模型配合，参数里出现同一值就拒绝 |
 | 事后审计 | 记录发生了什么 | 记录 + 阻止 + 可校验的哈希链 |
-| 通用 DLP | 正则扫描内容 | 值级血缘：只拦“确实来自某次敏感读取”的值，误报面更窄 |
+| 通用 DLP | 正则扫描内容 | 值级血缘：只拦“确实来自某次敏感读取”的值 |
+| Python/TS 网关 | 依赖解释器与运行时 | MoonBit 单核可编译到 JS/Wasm，服务端直接嵌同一份判定 |
 
-**工程上的差异**：判定引擎用 MoonBit 写，无第三方依赖，可编译到 JS/Wasm；协议解析、策略、血缘、账本、报告全部同一套代码。这在 MCP 生态里不常见。
+**工程上的差异**：判定引擎用 MoonBit 写，无第三方依赖；协议解析、策略、血缘、账本、报告、guard 全部同一套代码。第二执行点不是另写一份规则，而是同一个 `guard_decision` 函数。
 
 ## 仍然存在的边界
 
 这一版没有解决所有问题，以下限制写在 [SEMANTICS.md](SEMANTICS.md) 里，也在 README 中提示：
 
-- 不经过网关的调用无法阻止；
+- 服务端没有嵌入 guard 时，绕过网关仍然无法阻止；
 - 血缘是精确值匹配，改写、编码、分片传输可以绕过；
+- 路径规范化是词法的，不解析符号链接；
 - 不是操作系统沙箱，不限制上游服务端自身的行为；
 - 审批台只监听 `127.0.0.1`，多用户场景需要额外的身份层。
 

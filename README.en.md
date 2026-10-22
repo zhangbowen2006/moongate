@@ -1,81 +1,99 @@
-# Airlock
+# MoonGate
 
-**A runtime policy gateway between agents and MCP tools.** Every tool call is checked before it is forwarded; a denied call never reaches the server, so the side effect never happens.
+**Two enforcement points for MCP tools.** The same MoonBit policy core runs in the gateway *and* inside the MCP server, so a bypassed proxy does not mean an unprotected tool.
 
-The decision engine is written in MoonBit (compiled to JavaScript for the host). A prebuilt engine ships in `dist/`, so the demo runs with Node 22+ and no MoonBit toolchain.
+The decision engine is MoonBit (compiled to JavaScript for the host). A prebuilt engine ships in `dist/`, so the demo runs with Node 22+ and no MoonBit toolchain.
 
-## Why
+## Honest positioning
 
-Observing a trace after the fact tells you what happened, not what almost happened. Airlock sits in the path: it reads each JSON-RPC line, decides, and only then writes to the upstream process.
+MCP security gateways already exist and overlap heavily: MCP Shield, MCPKernel, mcp-firewall and taintmcp all provide policy, approvals, taint tracking and hash-chained audit logs; AgentPerms even infers a least-privilege policy from a recorded session.
+
+MoonGate does not claim to invent those. Its difference is structural:
+
+1. **Two enforcement points.** Those projects run one proxy process. If the client connects to the server directly, or the server is invoked by something else, the proxy is out of the loop. MoonGate compiles the same policy into the server, which checks again at the tool handler.
+2. **One MoonBit core, multiple deployment shapes.** The gateway and the in-server guard call the same `.mbt` code; it can be built to JS/Wasm and embedded rather than requiring a Python or Node sidecar.
+
+## What the second point buys
 
 ```
-Agent ──stdio──▶ Airlock ──stdio──▶ MCP Server ──▶ files / network / database
-                    │
-                    ├─ policy: is this tool, with these arguments, allowed?
-                    ├─ lineage: do the arguments carry a value read earlier?
-                    ├─ approval: a human may grant exactly one call
-                    └─ ledger: hash-chained, verifiable offline
+Agent ──stdio──▶ MoonGate gateway ──stdio──▶ MCP server ──▶ files / network
+                     │                          │
+                     │ check 1                  │ check 2 (embedded guard)
+                     │ policy + lineage + human │ same policy, hard denials
+                     └──────────────────────────┘
 ```
+
+The demo includes a deliberate bypass: a client connects straight to the server and calls `fs.delete` and `reports/../../etc/passwd`. Both are refused by the server's own guard; the file is still there.
 
 ## Quick start
 
 ```sh
-git clone https://github.com/zhangbowen2006/airlock.git
-cd airlock
+git clone https://github.com/zhangbowen2006/moongate.git
+cd moongate
 node demo/run.mjs
 ```
 
-The demo starts three real processes, touches real files, and asserts the outcome:
+The demo starts real processes, touches real files and hits a real HTTP sink. It asserts nine scenarios, including the bypass.
 
-- a credential read from `config/.env` cannot be POSTed out (`egress-taint`), and the local sink stays at zero requests;
-- `../` paths are rejected before the server sees them;
-- a write requires approval, lands on disk only after it, and a modified retry needs a new approval;
-- a denied write leaves the previous file content untouched;
-- the ledger chain verifies, and fails after a single byte changes.
+```sh
+node bin/moongate.mjs verify --ledger runs/demo.jsonl
+node bin/moongate.mjs report --ledger runs/demo.jsonl
+```
 
-## Build from source
-
-Requires MoonBit 0.10.16+.
+Build from source (MoonBit 0.10.16+):
 
 ```sh
 moon check --deny-warn
-moon test --deny-warn      # 26 unit tests
+moon test --deny-warn        # 29 unit tests
 node scripts/build.mjs
-node --test test/*.test.mjs  # 6 process-level tests
+node --test test/*.test.mjs  # 8 process-level tests
 ```
 
-Third-party interop (official SDK client + official filesystem server):
+## Use it
 
-```sh
-cd interop && npm install && node client.mjs
-```
-
-## Point any MCP client at it
+**As a gateway** — point any MCP client at `moongate run ... -- <original command>`:
 
 ```jsonc
 {
   "mcpServers": {
     "workspace": {
       "command": "node",
-      "args": ["/path/to/airlock/bin/airlock.mjs", "run",
-               "--policy", "/path/to/policy.json",
-               "--ledger", "/path/to/runs/session.jsonl",
-               "--", "npx", "-y", "@modelcontextprotocol/server-filesystem", "/path/to/workspace"]
+      "args": ["/abs/path/moongate/bin/moongate.mjs", "run",
+               "--policy", "/abs/path/policy.json",
+               "--ledger", "/abs/path/runs/session.jsonl",
+               "--", "npx", "-y", "@modelcontextprotocol/server-filesystem", "/abs/path/workspace"]
     }
   }
 }
 ```
 
-Denied calls return JSON-RPC error `-32001` with the rule, reason and lineage evidence, so the agent can adapt instead of retrying blindly.
+**As an in-server guard** — three lines before executing a tool:
 
-## Design notes
+```js
+import * as gate from 'moongate/dist/engine.js';
+const guard = JSON.parse(gate.guard_create(policyText)).handle;
+const verdict = JSON.parse(gate.guard_check(guard, name, JSON.stringify(args)));
+if (verdict.decision === 'deny') return { isError: true, content: [{ type: 'text', text: verdict.rule }] };
+```
 
-- Decisions run before forwarding; the host has no policy branches.
-- Lineage is exact-value taint with fingerprints, not semantic DLP. It is reproducible and explainable; it does not catch encoded or split payloads.
-- Approvals are bound to a canonical digest of the tool and arguments, expire, and are consumed once.
-- The ledger commits to its predecessor (`sha256(prev + "\n" + canonical(event))`), so edits are detectable.
+The guard enforces hard denials only. `approval` is returned as `allow`, because approval state lives in the gateway; otherwise an approved call would be blocked twice.
 
-Limits, threat model and non-goals: [docs/SEMANTICS.md](docs/SEMANTICS.md). Policy reference: [docs/POLICY.md](docs/POLICY.md). Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+## Policy, lineage, approvals
+
+- Ordered rules, first match wins, default deny; argument globs, prefixes, negation and lexical path normalization (`reports/../../etc/passwd` is not a `reports/*` path).
+- Sensitive results are reduced to SHA-256 fingerprints of secret-shaped values; an egress call carrying one is denied with the source call as evidence.
+- Approvals are bound to a canonical digest of `(tool, arguments)`, expire, and are consumed once.
+- Denied tools are removed from `tools/list`.
+- Every decision is one hash-chained ledger entry; `verify` recomputes the chain.
+
+## Limits
+
+- Without the embedded guard, a bypassed gateway is not protected.
+- Lineage is exact-value matching; encoding, splitting or paraphrasing evades it.
+- Path normalization is lexical; symlinks are not resolved.
+- Not a sandbox; not multi-user; stdio only.
+
+Full threat model: [docs/SEMANTICS.md](docs/SEMANTICS.md). Policy reference: [docs/POLICY.md](docs/POLICY.md).
 
 ## License
 

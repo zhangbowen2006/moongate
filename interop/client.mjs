@@ -2,7 +2,7 @@
 // Interop proof.
 //
 // Both ends are official packages: the client is @modelcontextprotocol/sdk and
-// the upstream is @modelcontextprotocol/server-filesystem. Airlock sits
+// the upstream is @modelcontextprotocol/server-filesystem. MoonGate sits
 // between them without either side knowing. If the gateway were only a
 // simulator, this script would fail at the handshake.
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -29,7 +29,7 @@ writeFileSync(join(WORKSPACE, 'note.txt'), 'hello from the filesystem server\n')
 const transport = new StdioClientTransport({
   command: process.execPath,
   args: [
-    join(ROOT, 'bin/airlock.mjs'),
+    join(ROOT, 'bin/moongate.mjs'),
     'run',
     '--policy',
     join(HERE, 'policy.filesystem.json'),
@@ -45,7 +45,7 @@ const transport = new StdioClientTransport({
   stderr: 'pipe',
 });
 
-const client = new Client({ name: 'airlock-interop', version: '0.1.0' });
+const client = new Client({ name: 'moongate-interop', version: '0.1.0' });
 transport.stderr?.setEncoding('utf8');
 transport.stderr?.on('data', (chunk) => {
   const text = String(chunk).trim();
@@ -61,7 +61,7 @@ const check = (label, ok, detail = '') => {
 try {
   await client.connect(transport);
   const server = client.getServerVersion();
-  console.log(`Airlock 互操作检查 · 第三方客户端 + 第三方服务端`);
+  console.log(`MoonGate 互操作检查 · 第三方客户端 + 第三方服务端`);
   console.log(`  服务端 ${server?.name} ${server?.version}`);
 
   const listed = await client.listTools();

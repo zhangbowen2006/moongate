@@ -4,7 +4,7 @@
 
 | # | 官方标准 | 本项目的满足方式 | 复核命令 |
 | --- | --- | --- | --- |
-| 01 | MoonBit 为主 | 协议状态机、策略、血缘、账本、报告全部由 MoonBit 实现；JS 只做进程与管道 | `moon test`，见下方代码分布 |
+| 01 | MoonBit 为主 | 协议状态机、策略、血缘、账本、报告、服务端 guard 全部由 MoonBit 实现；JS 只做进程与管道 | `moon test`，见下方代码分布 |
 | 02 | 仓库公开 | GitHub 公开仓库，保留连续提交 | 仓库首页 / `git log` |
 | 03 | 能够运行 | 预编译引擎 + Node 22，无外部服务；`demo/run.mjs` 一条命令跑完 | `node demo/run.mjs` |
 | 04 | 工作有效 | 全新仓库、全新架构；本期从零实现 | `git log --reverse` |
@@ -13,7 +13,7 @@
 
 ## 01 MoonBit 为主
 
-判定逻辑没有任何一部分在 JavaScript 里。`src/gateway.mjs` 只负责 spawn 子进程、读写管道、执行引擎返回的动作；如果删掉 `src/`，引擎仍能对每条消息给出正确判定（测试就是直接驱动引擎的）。
+判定逻辑没有任何一部分在 JavaScript 里。`src/gateway.mjs` 只负责 spawn 子进程、读写管道、执行引擎返回的动作；如果删掉 `src/`，引擎仍能对每条消息给出正确判定（测试就是直接驱动引擎的）。服务端 guard 也是同一份 MoonBit 代码，`demo/server.mjs` 只是调用 `guard_check`。
 
 代码分布（`cloc` 或编辑器统计，仅计源码）：
 
@@ -23,13 +23,13 @@
 
 ```sh
 moon check --deny-warn
-moon test --deny-warn      # 26 个单元测试
+moon test --deny-warn      # 29 个单元测试
 moon build api --target js --release --deny-warn
 ```
 
 ## 02 仓库公开
 
-GitHub：<https://github.com/zhangbowen2006/airlock>
+GitHub：<https://github.com/zhangbowen2006/moongate>
 
 提交历史按“协议层 → 策略 → 血缘 → 账本 → 网关 → 演示 → 测试 → 文档”分段，便于逐段审阅；CI 在推送后运行完整检查。
 
@@ -58,7 +58,8 @@ report: .../runs/demo.report.html
 5. 写文件需审批，批准后文件存在；
 6. 换内容再写需重新审批，拒绝后文件未变；
 7. 删除被拒绝且文件仍在；
-8. 账本哈希链完整。
+8. 绕过网关直连服务端，`fs.delete` 与路径穿越仍被服务端 guard 拒绝，文件仍在；
+9. 账本哈希链完整。
 
 从源码构建：
 
@@ -72,6 +73,8 @@ node scripts/build.mjs
 
 本项目不是 `AgentCanary` 的改名或拆包：上一版是“对已发生记录做离线评分”，本项目是“在真实调用链上做执行前拦截”。两者共享的只有“Agent 工具调用安全”这一个问题域，没有代码复用。
 
+与现有开源方案的差异写在 README 的对照表里：通用策略网关已有多个实现，本项目不声称发明它们；区别是同一份策略在网关与服务端两处执行，以及 MoonBit 单核多后端的部署形状。
+
 本期完成的实质工作：
 
 - MCP stdio 协议解析与 JSON-RPC 状态机（含请求/响应关联、通知、服务端反向请求）
@@ -80,7 +83,9 @@ node scripts/build.mjs
 - 一次性审批租约（参数规范化摘要、TTL、消费）
 - 哈希链账本、离线校验、HTML 报告
 - 真实进程网关、审批台、CLI
-- 26 个单元测试 + 6 个进程级集成测试 + 第三方互操作验证
+- 路径规范化（修掉 `reports/../../etc/passwd` 这类前缀绕过）
+- 服务端 guard：同一份策略的第二个执行点，绕过网关仍生效
+- 29 个单元测试 + 8 个进程级集成测试 + 第三方互操作验证
 
 ## 05 开源合规
 
@@ -93,6 +98,7 @@ node scripts/build.mjs
 
 - 为什么把判定放在协议层而不是模型层：`docs/ARCHITECTURE.md`
 - 为什么用值级血缘而不是语义分类：`docs/SEMANTICS.md`
+- 与现有方案重合在哪里、差异在哪里：`README.md` 的“与现有方案的关系”、`docs/REVIEW-RESPONSE.md`
 - 策略求值顺序与取舍：`docs/POLICY.md`
 - AI 参与了哪些部分、本人如何校验、哪些结论不能由 AI 代替：`docs/PROVENANCE.md`
 

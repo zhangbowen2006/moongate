@@ -1,8 +1,8 @@
 {
-  "name": "airlock-interop",
+  "name": "moongate-interop",
   "private": true,
   "type": "module",
-  "description": "Interop check: official MCP client + official filesystem server, with Airlock in the middle",
+  "description": "Interop check: official MCP client + official filesystem server, with MoonGate in the middle",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@modelcontextprotocol/server-filesystem": "^2026.1.14"

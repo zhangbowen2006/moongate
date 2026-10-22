@@ -14,10 +14,10 @@
           "prefix": [
             "..",
             "/",
-            "C://",
-            "~",
-            "\\\\"
-          ]
+            "C:/",
+            "~"
+          ],
+          "normalize": "path"
         }
       ]
     },
@@ -31,11 +31,11 @@
           "prefix": [
             "..",
             "/",
-            "C://",
-            "~",
-            "\\\\"
+            "C:/",
+            "~"
           ],
-          "negate": true
+          "negate": true,
+          "normalize": "path"
         }
       ]
     },
@@ -49,11 +49,11 @@
           "prefix": [
             "..",
             "/",
-            "C://",
-            "~",
-            "\\\\"
+            "C:/",
+            "~"
           ],
-          "negate": true
+          "negate": true,
+          "normalize": "path"
         }
       ]
     },

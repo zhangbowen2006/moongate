@@ -71,6 +71,7 @@
 - `glob`：任一匹配即可（OR）。
 - `prefix`：任一前缀命中即可（OR）。
 - `negate`：把结果取反。常用于“路径不以这些前缀开头”。
+- `normalize: "path"`：匹配前先做词法路径规范化（`\` 转 `/`，解析 `.` 与 `..`）。没有它，`reports/../../etc/passwd` 会通过 `reports/*` 这类前缀检查。
 - 多个 `when` 之间是 AND。
 
 `glob` 是整串匹配，不做路径规范化。`reports/*` 与 `reports/a/b.md` 不匹配，需要显式写 `reports/**`。
@@ -86,10 +87,10 @@
 
 血缘排在第 2 位，是因为它表达的是“这个值不能出去”，比“这个工具通常允许”更强；把血缘放在规则之后，一条宽泛的 allow 就能绕过它。
 
-规则按顺序匹配而不是“最具体优先”，是为了让策略可读、可预测。代价是顺序写错会遮蔽后面的规则，`airlock check` 会对同工具模式的无条件规则给出遮蔽警告：
+规则按顺序匹配而不是“最具体优先”，是为了让策略可读、可预测。代价是顺序写错会遮蔽后面的规则，`moongate check` 会对同工具模式的无条件规则给出遮蔽警告：
 
 ```sh
-node bin/airlock.mjs check --policy examples/policy.workspace.json
+node bin/moongate.mjs check --policy examples/policy.workspace.json
 ```
 
 建议的顺序：**窄范围 deny（逃逸、危险参数）→ 常规 allow → 需要审批的动作 → 兜底 deny**。
@@ -162,6 +163,20 @@ node bin/airlock.mjs check --policy examples/policy.workspace.json
 }
 ```
 
+**阻止路径穿越**
+
+```json
+{
+  "rules": [
+    { "id": "deny-escape", "tool": "fs.*", "decision": "deny",
+      "reason": "path escapes the workspace",
+      "when": [{ "arg": "path", "normalize": "path", "prefix": ["..", "/", "C:/", "~"] }] }
+  ]
+}
+```
+
+`normalize` 是词法的：它不访问文件系统、不解析符号链接、不做 URL 解码。
+
 **允许外发，但禁止携带刚读到的凭据**
 
 ```json
@@ -181,3 +196,4 @@ node bin/airlock.mjs check --policy examples/policy.workspace.json
 - 不解析工具语义，`tool` 名称由服务端决定，恶意服务端可以改名规避规则；因此策略应配合“默认拒绝 + 显式允许”。
 - `when` 只支持单层参数名，不支持 `a.b.c` 路径。
 - 不支持正则，只有 glob 与前缀；这是为了保持求值可预测、无回溯风险。
+- 服务端 guard 只执行 `deny`；`approval` 在 guard 里返回 `allow`，审批由网关负责。

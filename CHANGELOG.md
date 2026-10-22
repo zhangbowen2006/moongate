@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.0 — 2026-10-22
+
+定位从“单一网关”改为“双点执行边界”。原因：通用 MCP 策略网关已有多个实现，仅靠功能无法形成差异。
+
+### 新增
+
+- 服务端内嵌 guard：`guard_create` / `guard_check`，与网关共用同一份 MoonBit 策略；只执行硬拒绝，`approval` 交给网关
+- 演示第 9 步：绕过网关直连服务端，`fs.delete` 与路径穿越仍被拒绝
+- 路径词法规范化：`normalize: "path"`，关闭 `reports/../../etc/passwd` 这类前缀绕过
+- 29 个单元测试、8 个进程级测试（新增路径穿越、绕过网关）
+
+### 变更
+
+- 项目更名：Airlock → MoonGate，仓库迁移到 `zhangbowen2006/moongate`
+- 文档新增“与现有方案的关系”，如实列出 MCP Shield / MCPKernel / mcp-firewall / taintmcp / AgentPerms 的重合点
+
+
 ## 0.1.0 — 2026-10-22
 
 首个版本。定位是 Agent 与 MCP 服务端之间的运行时网关：判定发生在转发之前，被拒绝的调用不会产生副作用。
@@ -17,11 +34,11 @@
 
 ### 宿主（Node）
 
-- `airlock run`：拉起上游 MCP 服务端，泵送两个方向的协议行，执行引擎动作
+- `moongate run`：拉起上游 MCP 服务端，泵送两个方向的协议行，执行引擎动作
 - 本地审批台：`127.0.0.1` 随机端口，批准/拒绝，实时倒计时
-- `airlock verify`：离线校验账本
-- `airlock report`：从账本生成自包含 HTML 报告
-- `airlock check`：策略校验、生效规则、遮蔽警告
+- `moongate verify`：离线校验账本
+- `moongate report`：从账本生成自包含 HTML 报告
+- `moongate check`：策略校验、生效规则、遮蔽警告
 - 8 MiB 单行上限、上游崩溃处理、失败关闭
 
 ### 演示与验证
