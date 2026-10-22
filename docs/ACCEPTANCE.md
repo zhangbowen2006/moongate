@@ -98,7 +98,7 @@ node scripts/build.mjs
 模块名：`zhangbowen2006/moongate`
 
 ```sh
-moon add zhangbowen2006/moongate@0.5.0
+moon add zhangbowen2006/moongate@0.5.1
 ```
 
 包内可直接使用 `parse_policy`、`guard_decision`、`new_session`、`client_line`、`server_line`、`resolve_approval`、`verify_ledger`、`report_ledger`。发布版本与仓库 tag 对齐。
@@ -120,6 +120,9 @@ moon add zhangbowen2006/moongate@0.5.0
 
 ## 提交前清单（需要本人完成）
 
+- [ ] 申报书用 `SUBMISSION.md` 骨架，跑 `npm run check:submission -- SUBMISSION.md` 全绿
+- [ ] “与现有项目的关系”点名至少 2 个同类项目，声明无代码复用（见 `docs/OVERLAP.md`）
+- [ ] 作者审计：`git log --format='%an <%ae>' | sort -u` 只有一个账号（见 `docs/AUTHORSHIP.md`）
 - [ ] 确认仓库为 public，README 可访问
 - [ ] 在报名表中填写仓库地址与一页项目说明
 - [ ] 加入赛事交流群，群昵称改为 GitHub ID

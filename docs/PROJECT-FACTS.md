@@ -22,7 +22,7 @@
 - `tools/list` 能力裁剪
 - 值级血缘：提取、指纹、来源、外发匹配、证据
 - 密钥替身：结果脱敏为占位符、按 `reveal` 规则替换、未授权目的地拒绝
-- Mooncakes 库：`zhangbowen2006/moongate@0.5.0`
+- Mooncakes 库：`zhangbowen2006/moongate@0.5.1`
 - 一次性审批：参数摘要、TTL、消费后失效
 - 会话配额：调用数、参数字节、密钥替换次数
 - 哈希链账本、离线校验、HTML 报告

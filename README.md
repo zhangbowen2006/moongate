@@ -12,7 +12,7 @@
 - 第二执行点是一个几十行的嵌入调用，不需要改协议、不需要模型配合
 - 核心用 MoonBit 写，已发布到 [Mooncakes](https://mooncakes.io/docs/zhangbowen2006/moongate)；可编译到 JavaScript / Wasm
 
-[报告样例](examples/report.sample.html) · [English](README.en.md) · [架构](docs/ARCHITECTURE.md) · [策略语法](docs/POLICY.md) · [信任边界](docs/SEMANTICS.md) · [驳回意见回应](docs/REVIEW-RESPONSE.md) · [自查](docs/SELF-AUDIT.md)
+[报告样例](examples/report.sample.html) · [English](README.en.md) · [架构](docs/ARCHITECTURE.md) · [策略语法](docs/POLICY.md) · [信任边界](docs/SEMANTICS.md) · [驳回意见回应](docs/REVIEW-RESPONSE.md) · [同类项目对照](docs/OVERLAP.md) · [自查](docs/SELF-AUDIT.md)
 
 ---
 
@@ -28,6 +28,10 @@ MCP 安全网关在 2026 年已经是一个拥挤的赛道。以下项目都在�
 | taintmcp | 输出污点标记、来源追踪、首匹配策略 |
 | AgentPerms | 录制真实会话后推断最小权限，再代理执行 |
 | Authsome / OneCLI | 凭据代理：Agent 只拿到占位符，代理在出口替换 |
+
+Mooncakes 上已有 `yadidyc/moonpod`（通用策略核心，含预算/审批/审计）、`eisem/moon_policy`（RBAC）等模块。**MoonGate 不是它们的扩展，也不复用它们的代码**；完整对照、检索记录与差异见 [docs/OVERLAP.md](docs/OVERLAP.md)。
+
+如果你要的是通用策略语言或 RBAC，MoonPod / MoonPolicy 更合适；MoonGate 只做 MCP 工具调用这一层边界。
 
 **MoonGate 不是第一个策略网关，也不声称发明这些机制。** 我们的差异是结构性的：
 
@@ -112,7 +116,7 @@ node --test test/*.test.mjs # 10 个进程级测试
 ## 作为 MoonBit 库使用
 
 ```sh
-moon add zhangbowen2006/moongate@0.5.0
+moon add zhangbowen2006/moongate@0.5.1
 ```
 
 ```moonbit
@@ -239,7 +243,8 @@ hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 - `moon test --deny-warn`：38 个单元测试（策略顺序、血缘误报、路径规范化、guard、替身替换、审批一次性、账本篡改）
 - `node --test`：10 个真实进程测试（多服务端路由、脱敏、按目的地替换、路径穿越、绕过网关、失败关闭、篡改、报告）
 - `interop/`：官方 SDK 客户端 + 官方 filesystem 服务端，4/4 通过
-- Mooncakes：`moon add zhangbowen2006/moongate@0.5.0`，已在空工程中安装并调用 `guard_decision` 验证
+- Mooncakes：`moon add zhangbowen2006/moongate@0.5.1`，已在空工程中安装并调用 `guard_decision` 验证
+- 申报材料校验：`npm run check:submission -- SUBMISSION.md`，6 个测试覆盖格式/披露/场景数量
 - CI：Linux / macOS / Windows 三平台，含演示与互操作
 
 ## 边界

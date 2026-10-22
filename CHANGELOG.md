@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.5.1 — 2026-10-22
+
+材料合规补丁，运行时代码不变。针对 8 月 6 封驳回信中的“重叠未披露、作者归属、申报书格式”。
+
+### 新增
+
+- `docs/OVERLAP.md`：逐个列出 Mooncakes/GitHub 同类项目、重合点、差异、代码关系
+- `docs/registry-scan.json`：2026-10-22 的 `moon search` 原始结果（80 个模块）
+- `docs/AUTHORSHIP.md`：36 个提交的作者/提交者审计，确认无他人提交
+- `docs/REJECTION-PATTERNS.md`：6 封驳回信的逐条对照
+- `SUBMISSION.md`：一页 Markdown 骨架，含强制的“与现有项目的关系”
+- `scripts/check-submission.mjs` + 6 个测试：检查长度、章节、场景数、同类项目披露、占位符、HTML
+- `docs/SUBMISSION-CHECKLIST.md`：提交前逐项清单
+
+
 ## 0.5.0 — 2026-10-22
 
 新增多服务端模式：一个网关同时带多个 MCP 服务端，工具清单合并、调用按归属路由，血缘与密钥替身跨进程生效。
