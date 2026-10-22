@@ -1,5 +1,7 @@
 # MoonGate
 
+[![Mooncakes](https://img.shields.io/badge/mooncakes-zhangbowen2006%2Fmoongate-dfed86)](https://mooncakes.io/docs/zhangbowen2006/moongate)
+
 **Two enforcement points for MCP tools.** The same MoonBit policy core runs in the gateway *and* inside the MCP server, so a bypassed proxy does not mean an unprotected tool.
 
 **Secret stand-ins.** Sensitive values become `«mg:…»` placeholders before they reach the model. Only destinations explicitly allowed by policy get the real value, substituted at forward time. The agent can use a credential without ever seeing it.
