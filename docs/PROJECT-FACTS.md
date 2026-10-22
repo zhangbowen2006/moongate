@@ -6,8 +6,8 @@
 
 | 部分 | 行数 | 说明 |
 | --- | --- | --- |
-| MoonBit 引擎 | 约 2900 | `protocol.mbt` `policy.mbt` `lineage.mbt` `paths.mbt` `engine.mbt` `report.mbt` `sha256.mbt` `json_util.mbt` `glob.mbt` |
-| MoonBit 测试 | 约 900 | 35 个用例 |
+| MoonBit 引擎 | 约 3000 | `protocol.mbt` `policy.mbt` `lineage.mbt` `paths.mbt` `engine.mbt` `report.mbt` `sha256.mbt` `json_util.mbt` `glob.mbt` |
+| MoonBit 测试 | 约 970 | 35 个用例 |
 | Node 宿主 | 约 760 | `src/` + `bin/`，含审批台页面 |
 | 演示与测试 | 约 1010 | `demo/` + `test/` |
 
