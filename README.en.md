@@ -51,7 +51,7 @@ Build from source (MoonBit 0.10.16+):
 moon check --deny-warn
 moon test --deny-warn        # 38 unit tests
 node scripts/build.mjs
-node --test test/*.test.mjs  # 9 process-level tests
+node --test test/*.test.mjs  # 10 process-level tests
 ```
 
 ## Use it
@@ -92,13 +92,14 @@ The guard enforces hard denials only. `approval` is returned as `allow`, because
 - Session budgets cap total calls, argument bytes and secret reveals; zero disables a quota.
 - Approvals are bound to a canonical digest of `(tool, arguments)`, expire, and are consumed once.
 - A cross-product test asserts the gateway and the guard agree on every hard decision.
+- One gateway can front several MCP servers: tools are merged, calls are routed by owner, and lineage crosses process boundaries.
 - Denied tools are removed from `tools/list`.
 - Every decision is one hash-chained ledger entry; `verify` recomputes the chain.
 
 ## Mooncakes
 
 ```sh
-moon add zhangbowen2006/moongate@0.4.0
+moon add zhangbowen2006/moongate@0.5.0
 ```
 
 Use `parse_policy`, `guard_decision`, `new_session`, `client_line`, `server_line`, `resolve_approval`, `verify_ledger`.

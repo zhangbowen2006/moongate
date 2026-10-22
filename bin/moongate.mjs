@@ -9,6 +9,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { loadEngine, projectRoot } from '../src/engine.mjs';
 import { runGateway } from '../src/gateway.mjs';
+import { runMultiGateway } from '../src/multi.mjs';
 import { renderReport } from '../src/report.mjs';
 
 const HELP = `moongate — in-path policy and data-provenance gateway for MCP agents
@@ -68,7 +69,8 @@ function readLedger(path) {
 
 async function commandRun(argv) {
   const { flags, rest } = parseFlags(argv);
-  if (!rest.length) fail('run requires an upstream command after --');
+  if (!flags.servers && !rest.length) fail('run requires an upstream command after --');
+  if (flags.servers && rest.length) fail('use either --servers or -- <command>, not both');
   const policyPath = resolve(flags.policy || join(projectRoot, 'examples/policy.workspace.json'));
   if (!existsSync(policyPath)) fail(`policy not found: ${policyPath}`);
   const engine = await loadEngine();
@@ -76,17 +78,24 @@ async function commandRun(argv) {
   const sessionId = flags.session || `run-${stamp}`;
   const ledgerPath = resolve(flags.ledger || join('runs', `${sessionId}.jsonl`));
   mkdirSync(dirname(ledgerPath), { recursive: true });
-  await runGateway({
+  const common = {
     engine,
     policyText: readFileSync(policyPath, 'utf8'),
-    command: rest[0],
-    args: rest.slice(1),
     ledgerPath,
     sessionId,
     port: flags.port ? Number(flags.port) : 0,
     ui: flags['no-ui'] !== true,
     cwd: process.cwd(),
-  });
+  };
+  if (flags.servers) {
+    const config = JSON.parse(readFileSync(resolve(flags.servers), 'utf8'));
+    if (!Array.isArray(config.servers) || config.servers.length === 0) {
+      fail('--servers file must contain { "servers": [ ... ] }');
+    }
+    await runMultiGateway({ ...common, servers: config.servers });
+  } else {
+    await runGateway({ ...common, command: rest[0], args: rest.slice(1) });
+  }
 }
 
 async function commandCheck(argv) {

@@ -7,6 +7,7 @@
 
 **密钥替身。** 敏感值在进入模型上下文之前被替换成 `«mg:…»` 占位符；只有策略显式允许的目的地，网关才会在转发前换回真值。模型可以“使用”密钥，但从未看见它。
 
+- 一个网关可带多个 MCP 服务端，跨进程血缘成立
 - 策略、值级血缘、会话配额、一次性审批、哈希链账本，判定全部发生在执行之前
 - 第二执行点是一个几十行的嵌入调用，不需要改协议、不需要模型配合
 - 核心用 MoonBit 写，已发布到 [Mooncakes](https://mooncakes.io/docs/zhangbowen2006/moongate)；可编译到 JavaScript / Wasm
@@ -78,7 +79,7 @@ cd moongate
 node demo/run.mjs
 ```
 
-演示启动真实进程、写真实文件、发真实 HTTP 请求，10 个场景逐项断言：
+演示启动**四个真实进程**（客户端、网关、文件服务端、网络服务端），写真实文件、发真实 HTTP 请求，10 个场景逐项断言：
 
 | 场景 | 可观测证据 |
 | --- | --- |
@@ -105,13 +106,13 @@ node bin/moongate.mjs report --ledger runs/demo.jsonl
 moon check --deny-warn
 moon test --deny-warn       # 38 个单元测试
 node scripts/build.mjs
-node --test test/*.test.mjs # 9 个进程级测试
+node --test test/*.test.mjs # 10 个进程级测试
 ```
 
 ## 作为 MoonBit 库使用
 
 ```sh
-moon add zhangbowen2006/moongate@0.4.0
+moon add zhangbowen2006/moongate@0.5.0
 ```
 
 ```moonbit
@@ -130,6 +131,27 @@ fn main {
 ```
 
 网关侧使用 `new_session`、`client_line`、`server_line`、`resolve_approval`，接口与 `pkg.generated.mbti` 一致。
+
+## 多个服务端
+
+一个网关可以同时带多个 MCP 服务端。客户端看到合并后的工具清单，网关按工具归属把调用路由到对应进程，判定仍由同一个引擎完成：
+
+```jsonc
+// examples/servers.demo.json
+{ "servers": [
+  { "name": "fs",  "command": "node", "args": ["demo/server.mjs"], "env": { "MOONGATE_ROLE": "fs" } },
+  { "name": "net", "command": "node", "args": ["demo/server.mjs"], "env": { "MOONGATE_ROLE": "net" } }
+] }
+```
+
+```sh
+node bin/moongate.mjs run --policy examples/policy.workspace.json \
+  --servers examples/servers.demo.json --ledger runs/multi.jsonl
+```
+
+工具名冲突时自动加 `服务端名.` 前缀。跨进程血缘是重点：文件服务端读到的密钥被替换成占位符，网络服务端拿到占位符时同样受 `reveal` 约束。
+
+当前多服务端模式只合并 `tools`；`resources`/`prompts` 路由到第一个服务端。
 
 ## 两种接入方式
 
@@ -215,9 +237,9 @@ hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 ## 工程证据
 
 - `moon test --deny-warn`：38 个单元测试（策略顺序、血缘误报、路径规范化、guard、替身替换、审批一次性、账本篡改）
-- `node --test`：9 个真实进程测试（脱敏、按目的地替换、路径穿越、绕过网关、失败关闭、篡改、报告）
+- `node --test`：10 个真实进程测试（多服务端路由、脱敏、按目的地替换、路径穿越、绕过网关、失败关闭、篡改、报告）
 - `interop/`：官方 SDK 客户端 + 官方 filesystem 服务端，4/4 通过
-- Mooncakes：`moon add zhangbowen2006/moongate@0.4.0`，已在空工程中安装并调用 `guard_decision` 验证
+- Mooncakes：`moon add zhangbowen2006/moongate@0.5.0`，已在空工程中安装并调用 `guard_decision` 验证
 - CI：Linux / macOS / Windows 三平台，含演示与互操作
 
 ## 边界
@@ -228,7 +250,7 @@ hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 - 血缘与替身都是精确值匹配，编码、分片、改写可绕过
 - 路径规范化是词法的，不解析符号链接
 - 审批台无身份认证，只适合单机
-- 只实现 stdio 传输，单上游
+- 只实现 stdio 传输；多服务端模式只合并 tools
 
 完整威胁模型与失败模式：[docs/SEMANTICS.md](docs/SEMANTICS.md)。
 

@@ -9,19 +9,20 @@
 | MoonBit 引擎 | 约 3000 | `protocol.mbt` `policy.mbt` `lineage.mbt` `paths.mbt` `engine.mbt` `report.mbt` `sha256.mbt` `json_util.mbt` `glob.mbt` |
 | MoonBit 测试 | 约 1020 | 38 个用例 |
 | Node 宿主 | 约 760 | `src/` + `bin/`，含审批台页面 |
-| 演示与测试 | 约 1010 | `demo/` + `test/` |
+| 演示与测试 | 约 1200 | `demo/` + `test/` |
 
 判定逻辑全部在 MoonBit；Node 侧不含策略分支。服务端 guard 也调用同一份 MoonBit 代码。
 
 ## 能力
 
 - MCP stdio（换行分隔 JSON-RPC 2.0）透明代理
+- 多服务端：合并工具清单、按归属路由、跨进程血缘
 - 请求/响应关联、通知透传、服务端反向请求默认拒绝
 - 有序规则、参数 glob/前缀/取反/路径规范化、默认拒绝、频率限制
 - `tools/list` 能力裁剪
 - 值级血缘：提取、指纹、来源、外发匹配、证据
 - 密钥替身：结果脱敏为占位符、按 `reveal` 规则替换、未授权目的地拒绝
-- Mooncakes 库：`zhangbowen2006/moongate@0.4.0`
+- Mooncakes 库：`zhangbowen2006/moongate@0.5.0`
 - 一次性审批：参数摘要、TTL、消费后失效
 - 会话配额：调用数、参数字节、密钥替换次数
 - 哈希链账本、离线校验、HTML 报告
@@ -34,7 +35,7 @@
 moon check --deny-warn
 moon test --deny-warn              # 38 passed
 node scripts/build.mjs
-node --test test/*.test.mjs        # 9 passed
+node --test test/*.test.mjs        # 10 passed
 node demo/run.mjs                  # 10 个场景，含替身与绕过网关
 cd interop && npm install && node client.mjs   # 4/4
 node bin/moongate.mjs verify --ledger runs/demo.jsonl
@@ -72,7 +73,8 @@ node bin/moongate.mjs report --ledger runs/demo.jsonl
 3. 路径规范化是词法的，不解析符号链接；
 4. 审批台无身份认证，仅适合单机；
 5. 账本逐条落盘，吞吐不是强项；
-6. 只实现 stdio 传输，HTTP/SSE 未覆盖。
+6. 只实现 stdio 传输，HTTP/SSE 未覆盖；
+7. 多服务端模式只合并 tools，resources/prompts 走第一个服务端。
 
 ## 许可
 

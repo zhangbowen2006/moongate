@@ -35,6 +35,22 @@ function prepareWorkspace(name) {
   return workspace;
 }
 
+async function startMultiGateway(name) {
+  const workspace = prepareWorkspace(name);
+  const ledger = join(ROOT, 'runs', `test-${name}.jsonl`);
+  const pipe = new McpPipe(
+    process.execPath,
+    [BIN, 'run', '--policy', POLICY, '--servers', join(ROOT, 'examples/servers.demo.json'), '--ledger', ledger],
+    {
+      cwd: ROOT,
+      env: { MOONGATE_WORKSPACE: workspace, MOONGATE_SINK: SINK, MOONGATE_POLICY: POLICY },
+    },
+  );
+  const ready = await waitForReady(pipe);
+  await pipe.initialize();
+  return { pipe, ready, workspace, ledger };
+}
+
 async function startGateway(name) {
   const workspace = prepareWorkspace(name);
   const ledger = join(ROOT, 'runs', `test-${name}.jsonl`);
@@ -108,6 +124,45 @@ test('secrets are masked and only revealed to approved destinations', async () =
     const lines = readFileSync(ledger, 'utf8').trim().split('\n').map((line) => JSON.parse(line));
     assert.ok(!JSON.stringify(lines).includes(raw), 'ledger must not contain the raw secret');
     assert.ok(lines.some((event) => event.reveal_rule === 'internal-collector' && event.revealed === 1));
+  } finally {
+    await pipe.close();
+  }
+});
+
+test('one gateway merges two servers and keeps lineage across processes', async () => {
+  await fetch(`${SINK}/reset`);
+  const { pipe, ready } = await startMultiGateway('multi');
+  try {
+    assert.deepEqual([...ready.servers].sort(), ['fs', 'net']);
+    const list = await pipe.request('tools/list', {});
+    const names = list.tools.map((tool) => tool.name);
+    assert.ok(names.includes('fs.read'), 'fs server tools are merged');
+    assert.ok(names.includes('net.post'), 'net server tools are merged');
+    assert.ok(!names.includes('fs.delete'), 'the denied tool stays hidden after merging');
+
+    const env = await pipe.callTool('fs.read', { path: 'config/.env' });
+    const text = env.content[0].text;
+    assert.ok(!text.includes('sk-live-TEST'), 'plaintext must not cross the process boundary');
+    const placeholder = (text.match(/«mg:[0-9a-f]{16}»/) || [])[0];
+    assert.ok(placeholder);
+
+    await assert.rejects(
+      () => pipe.callTool('net.post', { url: `${SINK}/collect`, body: `k=${placeholder}` }),
+      (error) => {
+        assert.equal(error.data.moongate.rule, 'secret-reveal');
+        return true;
+      },
+    );
+    const internal = await pipe.callTool('net.post', {
+      url: `${SINK}/internal/collect`,
+      body: `k=${placeholder}`,
+    });
+    assert.match(internal.content[0].text, /posted/);
+    const counts = await (await fetch(`${SINK}/count`)).json();
+    assert.equal(counts.external, 0);
+    assert.equal(counts.internal, 1);
+    const { bodies } = await (await fetch(`${SINK}/bodies`)).json();
+    assert.ok(bodies.some((body) => body.includes('sk-live-TEST')), 'the net server receives the revealed value');
   } finally {
     await pipe.close();
   }

@@ -38,7 +38,8 @@ if (policyPath) {
   }
 }
 
-const TOOLS = [
+const ROLE = process.env.MOONGATE_ROLE || 'all';
+const ALL_TOOLS = [
   {
     name: 'fs.list',
     description: 'List files under a directory inside the workspace.',
@@ -94,6 +95,10 @@ const TOOLS = [
     },
   },
 ];
+
+const TOOLS = ALL_TOOLS.filter((tool) =>
+  ROLE === 'all' ? true : ROLE === 'fs' ? tool.name.startsWith('fs.') : tool.name.startsWith('net.'),
+);
 
 function insideWorkspace(relative) {
   const target = resolve(WORKSPACE, relative || '.');

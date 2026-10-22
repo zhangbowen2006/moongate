@@ -1,0 +1,16 @@
+{
+  "servers": [
+    {
+      "name": "fs",
+      "command": "node",
+      "args": ["demo/server.mjs"],
+      "env": { "MOONGATE_ROLE": "fs" }
+    },
+    {
+      "name": "net",
+      "command": "node",
+      "args": ["demo/server.mjs"],
+      "env": { "MOONGATE_ROLE": "net" }
+    }
+  ]
+}

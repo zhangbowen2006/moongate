@@ -68,7 +68,7 @@ async function main() {
   const sink = await startSink();
   const pipe = new McpPipe(
     process.execPath,
-    [join(ROOT, 'bin/moongate.mjs'), 'run', '--policy', POLICY, '--ledger', LEDGER, '--', process.execPath, join(ROOT, 'demo/server.mjs')],
+    [join(ROOT, 'bin/moongate.mjs'), 'run', '--policy', POLICY, '--servers', join(ROOT, 'examples/servers.demo.json'), '--ledger', LEDGER],
     {
       cwd: ROOT,
       env: { MOONGATE_WORKSPACE: WORKSPACE, MOONGATE_SINK: SINK, MOONGATE_POLICY: POLICY },
@@ -80,7 +80,7 @@ async function main() {
 
   const ready = await waitForReady(pipe);
   let finalCounts = { external: 0, internal: 0 };
-  console.log('MoonGate 演示 · 真实 MCP 进程、真实文件副作用');
+  console.log('MoonGate 演示 · 两个真实 MCP 服务端、真实文件与网络副作用');
   console.log(`  策略 ${ready.policy} · 指纹 ${ready.digest.slice(0, 12)}…`);
   console.log(`  审批台 ${ready.approval_url}`);
   console.log(`  账本 ${LEDGER}`);
