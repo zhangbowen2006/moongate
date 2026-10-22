@@ -56,7 +56,7 @@ export async function runGateway(options) {
     cwd,
     stdio: ['pipe', 'pipe', 'inherit'],
     windowsHide: true,
-    env: { ...process.env, AIRLOCK: '1' },
+    env: { ...process.env, MOONGATE: '1' },
   });
 
   const state = () => {
