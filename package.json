@@ -1,0 +1,19 @@
+{
+  "name": "airlock",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "In-path policy enforcement and data-provenance gateway for MCP agents",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "airlock": "bin/airlock.mjs"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "demo": "node demo/run.mjs",
+    "demo:llm": "node demo/agent-llm.mjs"
+  }
+}
