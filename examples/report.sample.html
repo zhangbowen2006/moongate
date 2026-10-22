@@ -51,19 +51,19 @@
     <div>
       <h1>MoonGate 运行报告</h1>
       <div class="sub">策略 <strong>workspace-assistant</strong> ·
-        指纹 <span class="mono">10ca11073f6041a6</span> ·
-        18 条账本记录</div>
+        指纹 <span class="mono">a9271ddeb4fd54f2</span> ·
+        20 条账本记录</div>
     </div>
     <div class="meta">
-      <span class="pill good">哈希链完整 · 18 条</span><br/>
+      <span class="pill good">哈希链完整 · 20 条</span><br/>
       账本 <span class="mono">ns\demo.jsonl</span><br/>
       策略文件 <span class="mono">amples\policy.workspace.json</span><br/>
-      生成于 2026-10-22 10:31:50Z
+      生成于 2026-10-22 11:20:56Z
     </div>
   </header>
 
   <section class="cards">
-    <div class="card"><div class="k">执行（含审批通过）</div><div class="v">3</div></div>
+    <div class="card"><div class="k">执行（含审批通过）</div><div class="v">4</div></div>
     <div class="card"><div class="k">拒绝</div><div class="v">3</div></div>
     <div class="card"><div class="k">需要审批</div><div class="v">2</div></div>
     <div class="card"><div class="k">新增敏感值</div><div class="v">2</div></div>
@@ -75,8 +75,8 @@
     <tbody><tr>
         <td class="mono">net.post</td>
         <td><span class="badge bad">deny</span></td>
-        <td class="mono">egress-taint</td>
-        <td>arguments carry 1 value(s) seen in sensitive results</td>
+        <td class="mono">secret-reveal</td>
+        <td>destination is not allowed to receive a protected value</td>
         <td class="mono">c3</td>
         <td class="num">1</td>
       </tr><tr>
@@ -84,14 +84,14 @@
         <td><span class="badge bad">deny</span></td>
         <td class="mono">deny-escape</td>
         <td>path escapes the workspace</td>
-        <td class="mono">c4</td>
+        <td class="mono">c5</td>
         <td class="num">0</td>
       </tr><tr>
         <td class="mono">fs.delete</td>
         <td><span class="badge bad">deny</span></td>
         <td class="mono">no-delete</td>
         <td>deletion is never delegated to an agent</td>
-        <td class="mono">c7</td>
+        <td class="mono">c8</td>
         <td class="num">0</td>
       </tr></tbody>
   </table>
@@ -148,45 +148,55 @@
       </li><li>
         <span class="seq">#9</span>
         <span class="mono label">net.post deny</span>
-        <span class="rule">egress-taint</span>
-        <span class="reason">arguments carry 1 value(s) seen in sensitive results</span>
+        <span class="rule">secret-reveal</span>
+        <span class="reason">destination is not allowed to receive a protected value</span>
       </li><li>
         <span class="seq">#10</span>
+        <span class="mono label">net.post allow</span>
+        <span class="rule">internal-collector</span>
+        
+      </li><li>
+        <span class="seq">#11</span>
+        <span class="mono label">net.post result</span>
+        
+        
+      </li><li>
+        <span class="seq">#12</span>
         <span class="mono label">fs.read deny</span>
         <span class="rule">deny-escape</span>
         <span class="reason">path escapes the workspace</span>
       </li><li>
-        <span class="seq">#11</span>
+        <span class="seq">#13</span>
         <span class="mono label">fs.write approval</span>
         <span class="rule">write-report</span>
         <span class="reason">writes outside the report directory are reviewed by a human</span>
       </li><li>
-        <span class="seq">#12</span>
+        <span class="seq">#14</span>
         <span class="mono label">fs.write approval granted</span>
         
         
       </li><li>
-        <span class="seq">#13</span>
+        <span class="seq">#15</span>
         <span class="mono label">fs.write result</span>
         
         
       </li><li>
-        <span class="seq">#14</span>
+        <span class="seq">#16</span>
         <span class="mono label">fs.write approval</span>
         <span class="rule">write-report</span>
         <span class="reason">writes outside the report directory are reviewed by a human</span>
       </li><li>
-        <span class="seq">#15</span>
+        <span class="seq">#17</span>
         <span class="mono label">fs.write approval denied</span>
         
         
       </li><li>
-        <span class="seq">#16</span>
+        <span class="seq">#18</span>
         <span class="mono label">fs.delete deny</span>
         <span class="rule">no-delete</span>
         <span class="reason">deletion is never delegated to an agent</span>
       </li><li>
-        <span class="seq">#17</span>
+        <span class="seq">#19</span>
         <span class="mono label">session_close</span>
         
         
@@ -197,6 +207,6 @@
     账本每行都包含前一条的哈希，修改任意一行都会使校验失败。
   </footer>
 </div>
-<script type="application/json" id="moongate-report">{"report":{"entries":18,"policy":{"name":"workspace-assistant","digest":"10ca11073f6041a64b82827332ec3a142b5d0342b4b6be79d8626cb9ba058104"},"decisions":{"allow":2,"deny":3,"approval_required":2,"executed":3},"approvals":{"granted":1,"rejected":1},"results":{"count":3,"bytes":399,"new_sensitive_values":2},"blocked":[{"seq":9,"ts":1792665107726,"tool":"net.post","call":"c3","rule":"egress-taint","reason":"arguments carry 1 value(s) seen in sensitive results","evidence":1},{"seq":10,"ts":1792665107851,"tool":"fs.read","call":"c4","rule":"deny-escape","reason":"path escapes the workspace","evidence":0},{"seq":16,"ts":1792665107963,"tool":"fs.delete","call":"c7","rule":"no-delete","reason":"deletion is never delegated to an agent","evidence":0}],"timeline":[{"seq":0,"ts":1792665107056,"kind":"session_open","tool":"","call":"","decision":"","rule":"","reason":""},{"seq":1,"ts":1792665107140,"kind":"passthrough","tool":"","call":"","decision":"","rule":"","reason":""},{"seq":2,"ts":1792665107679,"kind":"passthrough","tool":"","call":"","decision":"","rule":"","reason":""},{"seq":3,"ts":1792665107684,"kind":"passthrough","tool":"","call":"","decision":"","rule":"","reason":""},{"seq":4,"ts":1792665107688,"kind":"tool_list_filtered","tool":"","call":"","decision":"","rule":"","reason":""},{"seq":5,"ts":1792665107694,"kind":"decision","tool":"fs.read","call":"c1","decision":"allow","rule":"read-workspace","reason":""},{"seq":6,"ts":1792665107706,"kind":"result","tool":"fs.read","call":"c1","decision":"","rule":"","reason":""},{"seq":7,"ts":1792665107712,"kind":"decision","tool":"fs.read","call":"c2","decision":"allow","rule":"read-workspace","reason":""},{"seq":8,"ts":1792665107718,"kind":"result","tool":"fs.read","call":"c2","decision":"","rule":"","reason":""},{"seq":9,"ts":1792665107726,"kind":"decision","tool":"net.post","call":"c3","decision":"deny","rule":"egress-taint","reason":"arguments carry 1 value(s) seen in sensitive results"},{"seq":10,"ts":1792665107851,"kind":"decision","tool":"fs.read","call":"c4","decision":"deny","rule":"deny-escape","reason":"path escapes the workspace"},{"seq":11,"ts":1792665107856,"kind":"decision","tool":"fs.write","call":"c5","decision":"approval","rule":"write-report","reason":"writes outside the report directory are reviewed by a human"},{"seq":12,"ts":1792665107906,"kind":"approval","tool":"fs.write","call":"c5","decision":"granted","rule":"","reason":""},{"seq":13,"ts":1792665107916,"kind":"result","tool":"fs.write","call":"c5","decision":"","rule":"","reason":""},{"seq":14,"ts":1792665107932,"kind":"decision","tool":"fs.write","call":"c6","decision":"approval","rule":"write-report","reason":"writes outside the report directory are reviewed by a human"},{"seq":15,"ts":1792665107957,"kind":"approval","tool":"fs.write","call":"c6","decision":"denied","rule":"","reason":""},{"seq":16,"ts":1792665107963,"kind":"decision","tool":"fs.delete","call":"c7","decision":"deny","rule":"no-delete","reason":"deletion is never delegated to an agent"},{"seq":17,"ts":1792665108677,"kind":"session_close","tool":"","call":"","decision":"","rule":"","reason":""}],"chain":{"ok":true,"entries":18,"head":"187914b2db709937feb79a118751700777708771db29f621ca38734b3f98a63f","reason":"chain intact"}},"verify":{"ok":true,"entries":18,"head":"187914b2db709937feb79a118751700777708771db29f621ca38734b3f98a63f","reason":"chain intact"}}</script>
+<script type="application/json" id="moongate-report">{"report":{"entries":20,"policy":{"name":"workspace-assistant","digest":"a9271ddeb4fd54f29819db7fce32b29c691d6c4c3d2d78005a29becfef46ffaf"},"decisions":{"allow":3,"deny":3,"approval_required":2,"executed":4},"approvals":{"granted":1,"rejected":1},"results":{"count":4,"bytes":510,"new_sensitive_values":2},"blocked":[{"seq":9,"ts":1792668055810,"tool":"net.post","call":"c3","rule":"secret-reveal","reason":"destination is not allowed to receive a protected value","evidence":1},{"seq":12,"ts":1792668055888,"tool":"fs.read","call":"c5","rule":"deny-escape","reason":"path escapes the workspace","evidence":0},{"seq":18,"ts":1792668055939,"tool":"fs.delete","call":"c8","rule":"no-delete","reason":"deletion is never delegated to an agent","evidence":0}],"timeline":[{"seq":0,"ts":1792668055421,"kind":"session_open","tool":"","call":"","decision":"","rule":"","reason":""},{"seq":1,"ts":1792668055509,"kind":"passthrough","tool":"","call":"","decision":"","rule":"","reason":""},{"seq":2,"ts":1792668055778,"kind":"passthrough","tool":"","call":"","decision":"","rule":"","reason":""},{"seq":3,"ts":1792668055781,"kind":"passthrough","tool":"","call":"","decision":"","rule":"","reason":""},{"seq":4,"ts":1792668055784,"kind":"tool_list_filtered","tool":"","call":"","decision":"","rule":"","reason":""},{"seq":5,"ts":1792668055788,"kind":"decision","tool":"fs.read","call":"c1","decision":"allow","rule":"read-workspace","reason":""},{"seq":6,"ts":1792668055795,"kind":"result","tool":"fs.read","call":"c1","decision":"","rule":"","reason":""},{"seq":7,"ts":1792668055800,"kind":"decision","tool":"fs.read","call":"c2","decision":"allow","rule":"read-workspace","reason":""},{"seq":8,"ts":1792668055805,"kind":"result","tool":"fs.read","call":"c2","decision":"","rule":"","reason":""},{"seq":9,"ts":1792668055810,"kind":"decision","tool":"net.post","call":"c3","decision":"deny","rule":"secret-reveal","reason":"destination is not allowed to receive a protected value"},{"seq":10,"ts":1792668055814,"kind":"decision","tool":"net.post","call":"c4","decision":"allow","rule":"internal-collector","reason":""},{"seq":11,"ts":1792668055853,"kind":"result","tool":"net.post","call":"c4","decision":"","rule":"","reason":""},{"seq":12,"ts":1792668055888,"kind":"decision","tool":"fs.read","call":"c5","decision":"deny","rule":"deny-escape","reason":"path escapes the workspace"},{"seq":13,"ts":1792668055892,"kind":"decision","tool":"fs.write","call":"c6","decision":"approval","rule":"write-report","reason":"writes outside the report directory are reviewed by a human"},{"seq":14,"ts":1792668055911,"kind":"approval","tool":"fs.write","call":"c6","decision":"granted","rule":"","reason":""},{"seq":15,"ts":1792668055916,"kind":"result","tool":"fs.write","call":"c6","decision":"","rule":"","reason":""},{"seq":16,"ts":1792668055924,"kind":"decision","tool":"fs.write","call":"c7","decision":"approval","rule":"write-report","reason":"writes outside the report directory are reviewed by a human"},{"seq":17,"ts":1792668055935,"kind":"approval","tool":"fs.write","call":"c7","decision":"denied","rule":"","reason":""},{"seq":18,"ts":1792668055939,"kind":"decision","tool":"fs.delete","call":"c8","decision":"deny","rule":"no-delete","reason":"deletion is never delegated to an agent"},{"seq":19,"ts":1792668056283,"kind":"session_close","tool":"","call":"","decision":"","rule":"","reason":""}],"chain":{"ok":true,"entries":20,"head":"e014fc9a7ae52b3a2ce25a7f386b552f4ec44c93f81fac50f7ef7d18716bc6de","reason":"chain intact"}},"verify":{"ok":true,"entries":20,"head":"e014fc9a7ae52b3a2ce25a7f386b552f4ec44c93f81fac50f7ef7d18716bc6de","reason":"chain intact"}}</script>
 </body>
 </html>

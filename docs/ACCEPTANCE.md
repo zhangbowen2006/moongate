@@ -4,7 +4,7 @@
 
 | # | 官方标准 | 本项目的满足方式 | 复核命令 |
 | --- | --- | --- | --- |
-| 01 | MoonBit 为主 | 协议状态机、策略、血缘、账本、报告、服务端 guard 全部由 MoonBit 实现；JS 只做进程与管道 | `moon test`，见下方代码分布 |
+| 01 | MoonBit 为主 | 协议状态机、策略、血缘、密钥替身、账本、报告、服务端 guard 全部由 MoonBit 实现；已作为 Mooncakes 库发布 | `moon test`，见下方代码分布 |
 | 02 | 仓库公开 | GitHub 公开仓库，保留连续提交 | 仓库首页 / `git log` |
 | 03 | 能够运行 | 预编译引擎 + Node 22，无外部服务；`demo/run.mjs` 一条命令跑完 | `node demo/run.mjs` |
 | 04 | 工作有效 | 全新仓库、全新架构；本期从零实现 | `git log --reverse` |
@@ -23,7 +23,7 @@
 
 ```sh
 moon check --deny-warn
-moon test --deny-warn      # 29 个单元测试
+moon test --deny-warn      # 35 个单元测试
 moon build api --target js --release --deny-warn
 ```
 
@@ -44,7 +44,7 @@ node demo/run.mjs
 预期最后几行：
 
 ```
-chain intact: 18 entries, head ...
+chain intact: 20 entries, head ...
 report: .../runs/demo.report.html
 演示完成。
 ```
@@ -52,14 +52,15 @@ report: .../runs/demo.report.html
 演示内部断言（任一失败则退出码非 0）：
 
 1. `tools/list` 不包含 `fs.delete`；
-2. 读取 `config/.env` 后再外发，返回 `egress-taint`；
-3. 本地 HTTP 接收端计数为 0；
-4. 路径逃逸返回 `deny-escape`；
-5. 写文件需审批，批准后文件存在；
-6. 换内容再写需重新审批，拒绝后文件未变；
-7. 删除被拒绝且文件仍在；
-8. 绕过网关直连服务端，`fs.delete` 与路径穿越仍被服务端 guard 拒绝，文件仍在；
-9. 账本哈希链完整。
+2. 读取 `config/.env` 后，客户端只看到 `«mg:…»`，明文没有进入上下文；
+3. 替身发往未授权地址返回 `secret-reveal`，接收端计数 0；
+4. 替身发往已授权地址，网关替换回真值，接收端收到真实密钥且计数 1；
+5. 路径逃逸返回 `deny-escape`；
+6. 写文件需审批，批准后文件存在；
+7. 换内容再写需重新审批，拒绝后文件未变；
+8. 删除被拒绝且文件仍在；
+9. 绕过网关直连服务端，`fs.delete` 与路径穿越仍被服务端 guard 拒绝，文件仍在；
+10. 账本哈希链完整。
 
 从源码构建：
 
@@ -85,7 +86,19 @@ node scripts/build.mjs
 - 真实进程网关、审批台、CLI
 - 路径规范化（修掉 `reports/../../etc/passwd` 这类前缀绕过）
 - 服务端 guard：同一份策略的第二个执行点，绕过网关仍生效
-- 29 个单元测试 + 9 个进程级集成测试 + 第三方互操作验证
+- 密钥替身：结果脱敏、按 `reveal` 规则替换、未授权目的地拒绝
+- Mooncakes 库发布，服务端可直接依赖
+- 35 个单元测试 + 9 个进程级集成测试 + 第三方互操作验证
+
+## Mooncakes 发布
+
+模块名：`zhangbowen2006/moongate`
+
+```sh
+moon add zhangbowen2006/moongate@0.3.0
+```
+
+包内可直接使用 `parse_policy`、`guard_decision`、`new_session`、`client_line`、`server_line`、`resolve_approval`、`verify_ledger`、`report_ledger`。发布版本与仓库 tag 对齐。
 
 ## 05 开源合规
 

@@ -33,6 +33,8 @@
 | `rate` | 对象 | `{window_ms: 60000, max_calls: 60}` | 每条会话独立计数 |
 | `approval_ttl_ms` | 整数 | 45000 | 审批请求的默认有效期 |
 | `min_secret_len` | 整数 | 12 | 血缘提取的最小值长度 |
+| `mask_secrets` | 布尔 | true | 把敏感结果中的值替换为 `«mg:<指纹>»`，明文只留在网关内存 |
+| `reveal` | 数组 | `[]` | 允许接收真值的目的地；未命中的占位符调用一律拒绝 |
 | `hide_denied` | 布尔 | true | 被无条件拒绝的工具不进入 `tools/list` |
 
 字段越界或类型错误会直接拒绝加载，错误信息带 JSON 路径，不回显字段值。
@@ -94,6 +96,30 @@ node bin/moongate.mjs check --policy examples/policy.workspace.json
 ```
 
 建议的顺序：**窄范围 deny（逃逸、危险参数）→ 常规 allow → 需要审批的动作 → 兜底 deny**。
+
+## 密钥替身
+
+```jsonc
+{
+  "mask_secrets": true,
+  "sensitive": [
+    { "tool": "fs.read", "when": [{ "arg": "path", "glob": ["**/*.env"] }] }
+  ],
+  "reveal": [
+    { "id": "internal-collector", "tool": "net.post",
+      "when": [{ "arg": "url", "glob": ["**/internal/**"] }],
+      "reason": "the internal collector is allowed to receive the value" }
+  ]
+}
+```
+
+- `sensitive` 命中的结果会在转发给客户端前脱敏：密钥形状的值变成 `«mg:<16 位指纹>»`，明文写入会话内存 vault。
+- 客户端参数里出现占位符时，引擎先找 `reveal`：命中则替换回真值再转发；未命中返回 `-32001`，规则 `secret-reveal`，不转发。
+- 替换规则与工具规则分开：`rules` 决定“能不能调用”，`reveal` 决定“能不能看见值”。
+- 审批摘要基于替换前的参数（只含占位符），审批人看不到明文；账本只记录替换次数与 `reveal_rule`。
+- 服务端 guard 没有 vault：遇到占位符直接 `unresolved-secret` 拒绝。
+
+注意：`reveal` 是按目的地授权的。把 `**/internal/**` 写成 `**` 等于对所有外发工具开放真值；`airlock check` 不会阻止这种写法，因为它是策略意图，不是语法错误。
 
 ## 能力裁剪
 
@@ -197,3 +223,5 @@ node bin/moongate.mjs check --policy examples/policy.workspace.json
 - `when` 只支持单层参数名，不支持 `a.b.c` 路径。
 - 不支持正则，只有 glob 与前缀；这是为了保持求值可预测、无回溯风险。
 - 服务端 guard 只执行 `deny`；`approval` 在 guard 里返回 `allow`，审批由网关负责。
+- 占位符替换只发生在网关；guard 看到占位符会拒绝，不做替换。
+- `min_secret_len` 同时影响血缘与脱敏；调低会增加误伤，调高会漏掉短密钥。

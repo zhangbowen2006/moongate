@@ -72,25 +72,42 @@ after(() => {
   sink?.kill();
 });
 
-test('denied egress never reaches the network', async () => {
-  const { pipe, ledger } = await startGateway('egress');
+test('secrets are masked and only revealed to approved destinations', async () => {
+  await fetch(`${SINK}/reset`);
+  const raw = 'sk-live-TEST-9f3a2b7c1d4e';
+  const { pipe, ledger } = await startGateway('secrets');
   try {
     const env = await pipe.callTool('fs.read', { path: 'config/.env' });
-    const secret = env.content[0].text.match(/API_KEY=(\S+)/)[1];
+    const text = env.content[0].text;
+    assert.ok(!text.includes(raw), 'plaintext must not reach the client');
+    const placeholder = (text.match(/«mg:[0-9a-f]{16}»/) || [])[0];
+    assert.ok(placeholder, 'expected a placeholder in the masked result');
+
     await assert.rejects(
-      () => pipe.callTool('net.post', { url: `${SINK}/collect`, body: `k=${secret}` }),
+      () => pipe.callTool('net.post', { url: `${SINK}/collect`, body: `k=${placeholder}` }),
       (error) => {
-        assert.equal(error.data.moongate.rule, 'egress-taint');
-        assert.equal(error.data.moongate.evidence.length, 1);
+        assert.equal(error.data.moongate.rule, 'secret-reveal');
         assert.equal(error.data.moongate.evidence[0].source_tool, 'fs.read');
         return true;
       },
     );
-    const hits = (await (await fetch(`${SINK}/count`)).json()).hits;
-    assert.equal(hits, 0, 'the sink must not receive a blocked request');
+    let counts = await (await fetch(`${SINK}/count`)).json();
+    assert.equal(counts.external, 0, 'unauthorized destination must receive nothing');
+
+    const internal = await pipe.callTool('net.post', {
+      url: `${SINK}/internal/collect`,
+      body: `k=${placeholder}`,
+    });
+    assert.match(internal.content[0].text, /posted/);
+    counts = await (await fetch(`${SINK}/count`)).json();
+    assert.equal(counts.internal, 1, 'approved destination receives one request');
+    const { bodies } = await (await fetch(`${SINK}/bodies`)).json();
+    assert.ok(bodies.some((body) => body.includes(raw)), 'approved destination must receive the real value');
+    assert.ok(!bodies.some((body) => body.includes('«mg:')), 'placeholders must be resolved before forwarding');
+
     const lines = readFileSync(ledger, 'utf8').trim().split('\n').map((line) => JSON.parse(line));
-    assert.ok(lines.some((event) => event.decision === 'deny' && event.rule === 'egress-taint'));
-    assert.ok(lines.every((event) => !JSON.stringify(event).includes(secret)), 'ledger must not contain the secret');
+    assert.ok(!JSON.stringify(lines).includes(raw), 'ledger must not contain the raw secret');
+    assert.ok(lines.some((event) => event.reveal_rule === 'internal-collector' && event.revealed === 1));
   } finally {
     await pipe.close();
   }

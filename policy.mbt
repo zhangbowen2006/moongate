@@ -41,6 +41,17 @@ pub struct SensitiveRule {
 }
 
 ///|
+/// A destination that is allowed to receive a protected value. Reveal rules are
+/// intentionally separate from `rules`: allowing a tool to run is not the same
+/// as allowing it to see a secret.
+pub struct RevealRule {
+  id : String
+  tool : String
+  checks : Array[ArgCheck]
+  reason : String
+}
+
+///|
 pub struct RateLimit {
   window_ms : Int32
   max_calls : Int32
@@ -53,6 +64,8 @@ pub struct Policy {
   default_decision : String
   rules : Array[Rule]
   sensitive : Array[SensitiveRule]
+  reveal : Array[RevealRule]
+  mask_secrets : Bool
   egress_tools : Array[String]
   on_taint : String
   rate : RateLimit
@@ -321,6 +334,28 @@ pub fn parse_policy(text : String) -> Policy raise PolicyError {
   for i, item in sensitive_items {
     sensitive.push(parse_sensitive(item, i))
   }
+  let reveal_items = policy_array(fields, "reveal")
+  if reveal_items.length() > 64 {
+    policy_fail("policy.reveal: at most 64 entries")
+  }
+  let reveal : Array[RevealRule] = []
+  for i, item in reveal_items {
+    match item {
+      Object(rule) => {
+        let path = "policy.reveal[\{i}]"
+        reveal.push({
+          id: policy_optional_text(rule, "id", "reveal-\{i}"),
+          tool: policy_text(rule, "tool", path),
+          checks: match rule.get("when") {
+            Some(v) => parse_checks(v, "\{path}.when")
+            None => []
+          },
+          reason: policy_optional_text(rule, "reason", ""),
+        })
+      }
+      _ => policy_fail("policy.reveal[\{i}]: expected object")
+    }
+  }
   let egress_tools : Array[String] = []
   let mut on_taint = "deny"
   match fields.get("egress") {
@@ -375,6 +410,8 @@ pub fn parse_policy(text : String) -> Policy raise PolicyError {
     default_decision,
     rules,
     sensitive,
+    reveal,
+    mask_secrets: policy_bool(fields, "mask_secrets", true),
     egress_tools,
     on_taint,
     rate: { window_ms: rate_window, max_calls: rate_max, },
@@ -476,4 +513,17 @@ pub fn is_sensitive(policy : Policy, tool : String, args : Json) -> Bool {
 /// Whether a tool can carry data outside the trust boundary.
 pub fn is_egress(policy : Policy, tool : String) -> Bool {
   any_glob(policy.egress_tools, tool)
+}
+
+///|
+/// Whether a destination may receive the real value behind a placeholder.
+/// Absence of a matching rule means the placeholder stays unresolved and the
+/// call is refused by the engine.
+pub fn match_reveal(policy : Policy, tool : String, args : Json) -> RevealRule? {
+  for rule in policy.reveal {
+    if glob_match(rule.tool, tool) && checks_match(rule.checks, args) {
+      return Some(rule)
+    }
+  }
+  None
 }

@@ -1,6 +1,6 @@
 {
   "name": "moongate",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Dual-point policy enforcement for MCP tools (gateway + in-server guard)",

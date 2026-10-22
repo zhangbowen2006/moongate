@@ -36,6 +36,17 @@ struct PendingApproval {
 }
 
 ///|
+/// A protected value kept in memory for the lifetime of one session. It is
+/// never written to the ledger; only `preview` and the fingerprint leave the
+/// process.
+struct SecretEntry {
+  value : String
+  preview : String
+  call : String
+  tool : String
+}
+
+///|
 pub struct Session {
   id : String
   policy : Policy
@@ -46,6 +57,7 @@ pub struct Session {
   lists : Map[String, Bool]
   pending : Map[String, PendingApproval]
   taint : Map[String, TaintSource]
+  vault : Map[String, SecretEntry]
   mut attempts : Array[Int64]
   mut allowed : Int32
   mut denied : Int32
@@ -66,6 +78,7 @@ pub fn new_session(id : String, policy : Policy) -> Session {
     lists: Map([]),
     pending: Map([]),
     taint: Map([]),
+    vault: Map([]),
     attempts: [],
     allowed: 0,
     denied: 0,
@@ -349,25 +362,82 @@ fn approval_summary(
 }
 
 ///|
-fn add_taint(
+fn remember_raw(
   session : Session,
   call : String,
   tool : String,
-  texts : Array[String],
+  raws : Array[RawToken],
 ) -> Int32 {
-  let tokens = scan_fingerprints(texts, session.policy.min_secret_len)
   let mut count = 0
-  for token in tokens {
-    if !session.taint.contains(token.fingerprint) {
-      session.taint.set(
-        token.fingerprint,
-        taint_source(call, tool, token.preview),
-      )
+  for raw in raws {
+    if !session.taint.contains(raw.fingerprint) {
+      session.taint.set(raw.fingerprint, taint_source(call, tool, raw.preview))
       count += 1
+    }
+    if !session.vault.contains(raw.fingerprint) {
+      session.vault.set(raw.fingerprint, {
+        value: raw.value,
+        preview: raw.preview,
+        call,
+        tool,
+      })
     }
   }
   session.tainted_values += count
   count
+}
+
+///|
+fn mask_text(text : String, raws : Array[RawToken]) -> String {
+  let mut out = text
+  for raw in raws {
+    out = out.replace_all(old=raw.value, new=placeholder_for(raw.fingerprint))
+  }
+  out
+}
+
+///|
+fn placeholders_evidence(
+  session : Session,
+  fingerprints : Array[String],
+) -> Array[TaintHit] {
+  let hits : Array[TaintHit] = []
+  for fingerprint in fingerprints {
+    match session.vault.get(fingerprint) {
+      Some(entry) =>
+        hits.push({
+          fingerprint,
+          preview: entry.preview,
+          source: taint_source(entry.call, entry.tool, entry.preview),
+        })
+      None => ()
+    }
+  }
+  hits
+}
+
+///|
+fn vault_values(session : Session) -> Map[String, String] {
+  let values : Map[String, String] = Map([])
+  for fingerprint, entry in session.vault {
+    values.set(fingerprint, entry.value)
+  }
+  values
+}
+
+///|
+fn rebuild_with_params(msg : RpcMessage, params : Json) -> String {
+  match msg.raw {
+    Object(fields) => {
+      let copy : Map[String, Json] = Map([])
+      for key, value in fields {
+        copy.set(key, value)
+      }
+      copy.set("params", params)
+      json_render(Json::object(copy))
+    }
+    _ => json_render(msg.raw)
+  }
 }
 
 ///|
@@ -380,6 +450,8 @@ fn decision_ledger(
   digest : String,
   args : Json,
   via : String,
+  revealed : Int32,
+  reveal_rule : String,
 ) -> Json {
   ledger_event(session, now, "decision", [
     ("tool", json_str(tool)),
@@ -390,6 +462,8 @@ fn decision_ledger(
     ("digest", json_str(digest)),
     ("via", json_str(via)),
     ("args_keys", json_strings(object_keys(args))),
+    ("revealed", json_int(revealed)),
+    ("reveal_rule", json_str(reveal_rule)),
     ("evidence", evidence_json(verdict.hits)),
   ])
 }
@@ -467,9 +541,53 @@ fn handle_tool_call(
   let digest = call_digest(tool, args)
   session.call_seq += 1
   let call = "c\{session.call_seq}"
+  let fingerprints = placeholders_in(args)
+  let mut forward_line = line
+  let mut revealed = 0
+  let mut reveal_rule = ""
+  if !fingerprints.is_empty() {
+    match match_reveal(session.policy, tool, args) {
+      None => {
+        let verdict : Verdict = {
+          decision: "deny",
+          rule: "secret-reveal",
+          reason: "destination is not allowed to receive a protected value",
+          hits: placeholders_evidence(session, fingerprints),
+          ttl_ms: 0,
+        }
+        actions.push(
+          decision_ledger(
+            session, now, tool, call, verdict, digest, args, "client", 0, "",
+          ),
+        )
+        session.denied += 1
+        actions.push(
+          action_client(
+            json_render(deny_response(msg, verdict, call, tool, digest)),
+          ),
+        )
+        return actions
+      }
+      Some(rule) => {
+        reveal_rule = rule.id
+        revealed = fingerprints.length()
+        let values = vault_values(session)
+        let params = map_json_strings(
+          match msg.params {
+            Some(params) => params
+            None => Json::null()
+          },
+          fn(text) { reveal_placeholders(text, values).0 },
+        )
+        forward_line = rebuild_with_params(msg, params)
+      }
+    }
+  }
   let verdict = decide(session, tool, args, now)
   actions.push(
-    decision_ledger(session, now, tool, call, verdict, digest, args, "client"),
+    decision_ledger(
+      session, now, tool, call, verdict, digest, args, "client", revealed, reveal_rule,
+    ),
   )
   match verdict.decision {
     "allow" => {
@@ -481,7 +599,7 @@ fn handle_tool_call(
         tool,
         sensitive: is_sensitive(session.policy, tool, args),
       })
-      actions.push(action_upstream(line))
+      actions.push(action_upstream(forward_line))
     }
     "approval" => {
       session.approval_requests += 1
@@ -490,7 +608,7 @@ fn handle_tool_call(
         call,
         tool,
         digest,
-        line,
+        line: forward_line,
         key: id_key(msg.id),
         id: msg.id,
         rule: verdict.rule,
@@ -694,20 +812,31 @@ fn handle_server_response(
     let texts = collect_strings(
       match msg.result {
         Some(result) => result
-        None => Json::null()
+        None => msg.error.unwrap_or(Json::null())
       },
     )
+    let raws = if call.sensitive {
+      scan_raw(texts, session.policy.min_secret_len)
+    } else {
+      []
+    }
     let added = if call.sensitive {
-      add_taint(session, call.call, call.tool, texts)
+      remember_raw(session, call.call, call.tool, raws)
     } else {
       0
+    }
+    let masked = session.policy.mask_secrets && raws.length() > 0
+    let outgoing = if masked {
+      json_render(map_json_strings(msg.raw, fn(text) { mask_text(text, raws) }))
+    } else {
+      line
     }
     let is_error = match msg.error {
       Some(_) => true
       None => false
     }
     let actions : Array[Json] = [
-      action_client(line),
+      action_client(outgoing),
       ledger_event(session, now, "result", [
         ("tool", json_str(call.tool)),
         ("call", json_str(call.call)),
@@ -715,6 +844,7 @@ fn handle_server_response(
         ("is_error", json_bool(is_error)),
         ("sensitive", json_bool(call.sensitive)),
         ("new_values", json_int(added)),
+        ("masked", json_int(if masked { raws.length() } else { 0 })),
       ]),
     ]
     actions
@@ -821,6 +951,11 @@ pub fn server_line(
 /// whether a human approved the call. This is the second enforcement point —
 /// if the gateway is bypassed, forbidden tools still do not run.
 pub fn guard_decision(policy : Policy, tool : String, args : Json) -> Json {
+  if !placeholders_in(args).is_empty() {
+    return guard_payload(
+      "deny", "unresolved-secret", "a placeholder can only be resolved by the gateway",
+    )
+  }
   match match_rule(policy, tool, args) {
     Some(hit) => guard_payload(hit.decision, hit.id, hit.reason)
     None => guard_payload(policy.default_decision, "default", "no rule matched")

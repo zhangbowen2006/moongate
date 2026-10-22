@@ -26,7 +26,11 @@ pub fn error_response(Json?, Int32, String, Json?) -> Json
 
 pub fn expire_approvals(Session, Int64) -> Array[Json]
 
+pub fn extract_raw(String, Int32) -> Array[RawToken]
+
 pub fn extract_tokens(String, Int32) -> Array[SecretToken]
+
+pub fn find_placeholders(String) -> Array[String]
 
 pub fn find_taint(Map[String, TaintSource], Array[String], Int32) -> Array[TaintHit]
 
@@ -84,6 +88,10 @@ pub fn json_str(String) -> Json
 
 pub fn json_strings(Array[String]) -> Json
 
+pub fn map_json_strings(Json, (String) -> String) -> Json
+
+pub fn match_reveal(Policy, String, Json) -> RevealRule?
+
 pub fn match_rule(Policy, String, Json) -> RuleHit?
 
 pub fn new_session(String, Policy) -> Session
@@ -96,13 +104,21 @@ pub fn parse_policy(String) -> Policy raise PolicyError
 
 pub fn parse_rpc(Json) -> RpcMessage?
 
+pub fn placeholder_for(String) -> String
+
+pub fn placeholders_in(Json) -> Array[String]
+
 pub fn report_ledger(Array[String]) -> Json
 
 pub fn resolve_approval(Session, String, Bool, Int64) -> Array[Json]
 
 pub fn result_response(Json?, Json) -> Json
 
+pub fn reveal_placeholders(String, Map[String, String]) -> (String, Int32)
+
 pub fn scan_fingerprints(Array[String], Int32) -> Array[SecretToken]
+
+pub fn scan_raw(Array[String], Int32) -> Array[RawToken]
 
 pub fn server_line(Session, String, Int64) -> Array[Json]
 
@@ -144,6 +160,8 @@ pub struct Policy {
   default_decision : String
   rules : Array[Rule]
   sensitive : Array[SensitiveRule]
+  reveal : Array[RevealRule]
+  mask_secrets : Bool
   egress_tools : Array[String]
   on_taint : String
   rate : RateLimit
@@ -155,6 +173,19 @@ pub struct Policy {
 pub struct RateLimit {
   window_ms : Int32
   max_calls : Int32
+}
+
+pub struct RawToken {
+  value : String
+  fingerprint : String
+  preview : String
+}
+
+pub struct RevealRule {
+  id : String
+  tool : String
+  checks : Array[ArgCheck]
+  reason : String
 }
 
 pub struct RpcMessage {
@@ -183,6 +214,8 @@ pub struct RuleHit {
   ttl_ms : Int32
 }
 
+type SecretEntry
+
 pub struct SecretToken {
   fingerprint : String
   preview : String
@@ -204,6 +237,7 @@ pub struct Session {
   lists : Map[String, Bool]
   pending : Map[String, PendingApproval]
   taint : Map[String, TaintSource]
+  vault : Map[String, SecretEntry]
   mut attempts : Array[Int64]
   mut allowed : Int32
   mut denied : Int32

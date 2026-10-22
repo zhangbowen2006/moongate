@@ -2,11 +2,13 @@
 
 **MCP 工具的双点执行边界。** 同一套 MoonBit 判定核心，既跑在网关进程里，也能被 MCP 服务端直接嵌入：网关被绕过时，服务端自己仍然会拒绝。
 
+**密钥替身。** 敏感值在进入模型上下文之前被替换成 `«mg:…»` 占位符；只有策略显式允许的目的地，网关才会在转发前换回真值。模型可以“使用”密钥，但从未看见它。
+
 - 策略、值级血缘、一次性审批、哈希链账本，判定全部发生在执行之前
 - 第二执行点是一个几十行的嵌入调用，不需要改协议、不需要模型配合
-- 核心用 MoonBit 写，可编译到 JavaScript / Wasm；仓库自带编译产物，不装 MoonBit 也能运行
+- 核心用 MoonBit 写，已发布到 Mooncakes；可编译到 JavaScript / Wasm
 
-[报告样例](examples/report.sample.html) · [English](README.en.md) · [架构](docs/ARCHITECTURE.md) · [策略语法](docs/POLICY.md) · [信任边界](docs/SEMANTICS.md) · [驳回意见回应](docs/REVIEW-RESPONSE.md)
+[报告样例](examples/report.sample.html) · [English](README.en.md) · [架构](docs/ARCHITECTURE.md) · [策略语法](docs/POLICY.md) · [信任边界](docs/SEMANTICS.md) · [驳回意见回应](docs/REVIEW-RESPONSE.md) · [自查](docs/SELF-AUDIT.md)
 
 ---
 
@@ -21,15 +23,17 @@ MCP 安全网关在 2026 年已经是一个拥挤的赛道。以下项目都在�
 | mcp-firewall | 策略、审批、哈希链、仪表盘 |
 | taintmcp | 输出污点标记、来源追踪、首匹配策略 |
 | AgentPerms | 录制真实会话后推断最小权限，再代理执行 |
+| Authsome / OneCLI | 凭据代理：Agent 只拿到占位符，代理在出口替换 |
 
-**MoonGate 不是第一个策略网关，也不声称发明了这些机制。** 我们的差异只有两点，但都是结构性的：
+**MoonGate 不是第一个策略网关，也不声称发明这些机制。** 我们的差异是结构性的：
 
-1. **双点执行**：上面这些方案都是“一个代理进程”。代理被绕过（客户端直连服务端、服务端被别的进程调用、配置写错）就没有保护。MoonGate 把同一份策略编译进服务端，在工具函数执行前再判一次。两个点独立生效。
-2. **MoonBit 单核多后端**：判定核心是一套 `.mbt` 代码，网关卡在 Node 里用，服务端可以直接嵌同一份编译产物；后续可编译到 Wasm/Native，不绑定运行时。这是 Python/TypeScript 方案做不到的部署形状。
+1. **双点执行**：上面这些方案都是一个代理进程。代理被绕过（客户端直连服务端、服务端被别的进程调用、配置写错）就没有保护。MoonGate 把同一份策略编译进服务端，在工具函数执行前再判一次。
+2. **在工具调用边界做密钥替身**：凭据代理通常在 HTTP 出口替换 header；MoonGate 在 MCP 的 `tools/call` 参数与工具结果里做替换，占位符可以跨工具流转，替换目标由策略逐条授权。模型上下文里始终没有明文。
+3. **MoonBit 单核多后端**：网关与服务端 guard 共用一套 `.mbt`；同一份代码发布为 Mooncakes 库，可编译到 JS/Wasm。
 
-如果你只需要一个代理，MoonGate 和上面几个项目能力接近；第二执行点是它存在的理由。这一点写在 [REVIEW-RESPONSE](docs/REVIEW-RESPONSE.md) 里，没有回避。
+如果只用一个代理，MoonGate 和上面几个项目能力接近；第二执行点与密钥替身是它存在的理由。这一点写在 [REVIEW-RESPONSE](docs/REVIEW-RESPONSE.md) 里，没有回避。
 
-## 第二点解决什么
+## 两个执行点
 
 ```
 Agent ──stdio──▶ MoonGate 网关 ──stdio──▶ MCP Server ──▶ 文件 / 网络 / 数据库
@@ -41,7 +45,25 @@ Agent ──stdio──▶ MoonGate 网关 ──stdio──▶ MCP Server ─�
 
 演示里有一个专门的场景：**绕过网关，直接用客户端连服务端**，调用 `fs.delete` 和 `reports/../../etc/passwd`。两次都被服务端自己的 guard 拒绝，文件仍然存在。
 
-网关负责有状态的部分：跨调用的数据血缘、人工审批、账本。服务端 guard 负责无状态的硬规则：禁用工具、路径逃逸、默认拒绝。分工写在 [SEMANTICS.md](docs/SEMANTICS.md)。
+网关负责有状态的部分：跨调用的数据血缘、人工审批、密钥替身、账本。服务端 guard 负责无状态的硬规则：禁用工具、路径逃逸、默认拒绝、未解析的占位符。
+
+## 密钥替身
+
+```
+工具结果:  API_KEY=sk-live-9f3a2b7c1d4e
+              │ 网关提取、指纹、存入会话 vault
+              ▼
+模型看到:  API_KEY=«mg:8b201fda70f4dd1b»
+              │
+              ├─ 发往未授权地址 → 拒绝（secret-reveal），明文不离开网关
+              └─ 发往授权地址   → 转发前替换回真值，上游收到真实密钥
+```
+
+- vault 只在内存里，随会话结束消失；账本只记录指纹、4 字符前缀和替换次数。
+- 替换规则与工具规则分开：允许调用某个工具，不等于允许它看见密钥。
+- 服务端 guard 遇到未解析的占位符直接拒绝，避免绕过网关后把占位符当参数执行。
+
+它不试图理解语义，只做精确值替换；边界写在 [SEMANTICS.md](docs/SEMANTICS.md)。
 
 ## 五分钟运行
 
@@ -53,16 +75,18 @@ cd moongate
 node demo/run.mjs
 ```
 
-演示启动真实进程、写真实文件、发真实 HTTP 请求，9 个场景逐项断言：
+演示启动真实进程、写真实文件、发真实 HTTP 请求，10 个场景逐项断言：
 
 | 场景 | 可观测证据 |
 | --- | --- |
-| 凭据被读取后外发 | 被 `egress-taint` 拒绝；本地接收端计数保持 0 |
+| 读取凭据 | 模型只看到 `«mg:…»`，明文没有进入上下文 |
+| 替身发往未授权地址 | `secret-reveal` 拒绝；接收端 0 次 |
+| 替身发往已授权地址 | 网关替换回真值；接收端收到真实密钥，1 次 |
 | `reports/../../etc/passwd` | 规范化后命中 `deny-escape`，上游未收到请求 |
 | 写报告 | 审批台出现请求；批准后文件才落盘 |
 | 换内容再写 | 参数哈希变化，必须重新审批；拒绝后文件不变 |
 | 删除文件 | 工具未出现在 `tools/list`，强行调用也被拒绝 |
-| **绕过网关直连服务端** | **服务端 guard 拒绝删除与路径穿越，文件仍在** |
+| 绕过网关直连服务端 | 服务端 guard 拒绝删除与路径穿越，文件仍在 |
 | 账本 | `verify` 逐条重算哈希链 |
 
 ```sh
@@ -76,10 +100,33 @@ node bin/moongate.mjs report --ledger runs/demo.jsonl
 
 ```sh
 moon check --deny-warn
-moon test --deny-warn       # 29 个单元测试
+moon test --deny-warn       # 35 个单元测试
 node scripts/build.mjs
 node --test test/*.test.mjs # 9 个进程级测试
 ```
+
+## 作为 MoonBit 库使用
+
+```sh
+moon add zhangbowen2006/moongate@0.3.0
+```
+
+```moonbit
+import {
+  "zhangbowen2006/moongate" @moongate,
+}
+
+fn main {
+  let policy = @moongate.parse_policy(policy_json) catch {
+    @moongate.PolicyError(message) => abort(message)
+  }
+  // 服务端第二执行点：只做硬拒绝，approval 交给网关
+  let verdict = @moongate.guard_decision(policy, "fs.delete", args_json)
+  println(@moongate.json_render(verdict))
+}
+```
+
+网关侧使用 `new_session`、`client_line`、`server_line`、`resolve_approval`，接口与 `pkg.generated.mbti` 一致。
 
 ## 两种接入方式
 
@@ -104,11 +151,9 @@ node --test test/*.test.mjs # 9 个进程级测试
 }
 ```
 
-网关对 MCP 透明；被拒绝的调用返回 `-32001`，带规则、原因和血缘证据。
+被拒绝的调用返回 `-32001`，带规则、原因和血缘证据；被保护的返回值是占位符。
 
 ### 2. 作为服务端内的守卫（第二执行点）
-
-服务端（Node）在启动时加载同一份策略，执行工具前调用一次：
 
 ```js
 import * as gate from 'moongate/dist/engine.js';
@@ -116,42 +161,37 @@ import { readFileSync } from 'node:fs';
 
 const guard = JSON.parse(gate.guard_create(readFileSync('policy.json', 'utf8'))).handle;
 
-// 每个工具函数执行前
 const verdict = JSON.parse(gate.guard_check(guard, 'fs.delete', JSON.stringify(args)));
 if (verdict.decision === 'deny') {
   return { isError: true, content: [{ type: 'text', text: `blocked by ${verdict.rule}` }] };
 }
 ```
 
-`approval` 在 guard 里被当作 `allow`：审批是有状态的，归网关管；guard 只执行硬拒绝，避免把网关已经批准的动作再挡一次。
+`approval` 在 guard 里是 `allow`：审批有状态，归网关管。策略加载失败时服务端拒绝所有工具调用（失败关闭）。
 
-MoonBit 服务端可以直接 `@moongate.guard_decision(policy, tool, args)`，不需要经过 JS。
-
-## 三道检查（网关）
-
-### 策略
+## 策略与语义
 
 规则按声明顺序匹配，第一条命中生效，未命中落到 `default_decision`（默认拒绝）。参数条件支持 glob、前缀、取反和路径规范化：
 
 ```jsonc
 { "id": "deny-escape", "tool": "fs.*", "decision": "deny",
-  "reason": "path escapes the workspace",
   "when": [{ "arg": "path", "normalize": "path", "prefix": ["..", "/", "C:/", "~"] }] }
 ```
 
-`normalize: "path"` 会先解析 `.` 与 `..`，所以 `reports/../../etc/passwd` 不会被 `reports/*` 这种规则误放行。这是这一版修掉的一个真实绕过。
+`normalize: "path"` 先解析 `.` 与 `..`，所以 `reports/../../etc/passwd` 不会被 `reports/*` 误放行。
 
-被无条件拒绝的工具不会出现在 `tools/list`。
+密钥替身另有两段配置：
 
-### 值级血缘
+```jsonc
+{
+  "mask_secrets": true,
+  "sensitive": [{ "tool": "fs.read", "when": [{ "arg": "path", "glob": ["**/*.env"] }] }],
+  "reveal": [{ "id": "internal", "tool": "net.post",
+               "when": [{ "arg": "url", "glob": ["**/internal/**"] }] }]
+}
+```
 
-策略把某些结果标记为敏感后，网关提取其中形似密钥的值，只保存 SHA-256 指纹与 4 字符前缀，并记住来源调用。之后任何外发工具的参数中出现同一个值，调用被拒绝，证据指向源调用。
-
-判定依据是值本身，不是 Agent 声称的标签。它不试图理解自然语言，因此可解释、可复现；代价是只覆盖“原样携带”，边界写在 [SEMANTICS.md](docs/SEMANTICS.md)。
-
-### 一次性审批
-
-需要审批的调用会挂起，在本地审批台（`127.0.0.1` 随机端口）出现。批准与 `(工具名, 参数)` 的规范化 SHA-256 绑定：换参数要重新批、用一次即失效、超时回 `-32002`。
+审批与 `(工具名, 参数)` 的规范化 SHA-256 绑定，换参数、重放、超时都会失效。
 
 ## 账本
 
@@ -161,22 +201,24 @@ MoonBit 服务端可以直接 `@moongate.guard_decision(policy, tool, args)`，�
 hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 ```
 
-`canonical` 递归排序键，任何一行被改动都会让 `verify` 失败并指出序号。账本只记录工具名、参数键名、摘要和值指纹，不记录参数值。
+`canonical` 递归排序键，任何一行被改动都会让 `verify` 失败并指出序号。账本只记录工具名、参数键名、摘要、值指纹和替换次数，不记录参数值或明文。
 
 ## 工程证据
 
-- `moon test --deny-warn`：29 个单元测试（策略顺序、血缘误报、路径规范化、guard、审批一次性、账本篡改）
-- `node --test`：9 个真实进程测试（副作用、路径穿越、绕过网关、篡改、报告）
+- `moon test --deny-warn`：35 个单元测试（策略顺序、血缘误报、路径规范化、guard、替身替换、审批一次性、账本篡改）
+- `node --test`：9 个真实进程测试（脱敏、按目的地替换、路径穿越、绕过网关、失败关闭、篡改、报告）
 - `interop/`：官方 SDK 客户端 + 官方 filesystem 服务端，4/4 通过
 - CI：Linux / macOS / Windows 三平台，含演示与互操作
 
 ## 边界
 
-- 服务端没有嵌入 guard 时，绕过网关就失去保护；不是沙箱，不限制服务端自身权限
-- 血缘是精确值匹配，编码、分片、改写可绕过
+- 服务端没有嵌入 guard 时，绕过网关就失去保护；不是沙箱
+- 替身只覆盖工具结果里的字符串叶子；如果明文从别的通道进入上下文，不会被替换
+- 替换目标由策略决定，策略写错就会把密钥发给错误的人
+- 血缘与替身都是精确值匹配，编码、分片、改写可绕过
 - 路径规范化是词法的，不解析符号链接
 - 审批台无身份认证，只适合单机
-- 只实现 stdio 传输
+- 只实现 stdio 传输，单上游
 
 完整威胁模型与失败模式：[docs/SEMANTICS.md](docs/SEMANTICS.md)。
 

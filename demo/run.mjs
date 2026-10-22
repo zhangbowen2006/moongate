@@ -18,6 +18,7 @@ const POLICY = join(ROOT, 'examples/policy.workspace.json');
 const REPORT = join(ROOT, 'runs/demo.report.html');
 const SINK_PORT = 8787;
 const SINK = `http://127.0.0.1:${SINK_PORT}`;
+const DEMO_KEY = 'sk-live-DEMO-9f3a2b7c1d4e5f60';
 
 const step = (index, total, title) => console.log(`\n[${index}/${total}] ${title}`);
 const ok = (message) => console.log(`  \u2713 ${message}`);
@@ -33,7 +34,7 @@ function seedWorkspace() {
   mkdirSync(join(WORKSPACE, 'reports'), { recursive: true });
   writeFileSync(
     join(WORKSPACE, 'config/.env'),
-    'API_KEY=sk-live-DEMO-9f3a2b7c1d4e5f60\nDB_PASSWORD=postgres-prod-77c1\n',
+    `API_KEY=${DEMO_KEY}\nDB_PASSWORD=postgres-prod-77c1\n`,
   );
   writeFileSync(join(WORKSPACE, 'notes/todo.md'), '# 本周\n\n- 写周报\n- 清理临时目录\n');
 }
@@ -59,7 +60,7 @@ async function startSink() {
 
 async function sinkHits() {
   const response = await fetch(`${SINK}/count`);
-  return (await response.json()).hits;
+  return await response.json();
 }
 
 async function main() {
@@ -78,7 +79,7 @@ async function main() {
   );
 
   const ready = await waitForReady(pipe);
-  let hitsAtEnd = 0;
+  let finalCounts = { external: 0, internal: 0 };
   console.log('MoonGate 演示 · 真实 MCP 进程、真实文件副作用');
   console.log(`  策略 ${ready.policy} · 指纹 ${ready.digest.slice(0, 12)}…`);
   console.log(`  审批台 ${ready.approval_url}`);
@@ -100,28 +101,47 @@ async function main() {
     const todo = await pipe.callTool('fs.read', { path: 'notes/todo.md' });
     ok(`读到 ${todo.content[0].text.split('\n').length} 行笔记`);
 
-    step(4, 9, '读取凭据文件，数据被打上血缘标记');
+    step(4, 10, '读取凭据：模型只看到替身');
     const env = await pipe.callTool('fs.read', { path: 'config/.env' });
-    const secret = env.content[0].text.match(/API_KEY=(\S+)/)[1];
-    ok(`读到凭据 ${secret.slice(0, 6)}…（该值只在进程内传递，账本只记录指纹）`);
+    const envText = env.content[0].text;
+    const placeholder = (envText.match(/«mg:[0-9a-f]{16}»/) || [])[0];
+    if (!placeholder) bad('结果里没有生成占位符');
+    else if (envText.includes(DEMO_KEY)) bad('明文密钥进入了模型上下文');
+    else ok(`模型看到 ${placeholder}，明文没有进入上下文`);
 
-    step(5, 9, '尝试把凭据外发');
-    let blocked = null;
+    step(5, 10, '把替身发往未授权地址');
     try {
-      await pipe.callTool('net.post', { url: `${SINK}/collect`, body: `key=${secret}` });
-      bad('外发调用居然成功了');
+      await pipe.callTool('net.post', { url: `${SINK}/collect`, body: `key=${placeholder}` });
+      bad('未授权地址居然收到了调用');
     } catch (error) {
-      blocked = error;
       ok(`被拒绝：${error.message}`);
-      const rule = error.data?.moongate?.rule;
-      if (rule === 'egress-taint') ok(`命中数据血缘规则，证据 ${error.data.moongate.evidence.length} 条`);
-      else bad(`期望 egress-taint，实际 ${rule}`);
+      if (error.data?.moongate?.rule === 'secret-reveal') {
+        ok(`命中 secret-reveal，值来自 ${error.data.moongate.evidence[0]?.source_tool}`);
+      } else {
+        bad(`期望 secret-reveal，实际 ${error.data?.moongate?.rule}`);
+      }
     }
-    const hitsAfterBlock = await sinkHits();
-    if (hitsAfterBlock === 0) ok('接收端计数仍为 0：上游服务从未收到这次请求');
-    else bad(`接收端收到了 ${hitsAfterBlock} 次请求`);
 
-    step(6, 9, '尝试路径逃逸');
+    step(6, 10, '把替身发往已授权地址');
+    const internal = await pipe.callTool('net.post', {
+      url: `${SINK}/internal/collect`,
+      body: `key=${placeholder}`,
+    });
+    ok(`上游执行成功：${internal.content[0].text}`);
+    const counts = await (await fetch(`${SINK}/count`)).json();
+    if (counts.external === 0 && counts.internal === 1) {
+      ok('未授权地址 0 次，授权地址 1 次');
+    } else {
+      bad(`计数异常：external=${counts.external} internal=${counts.internal}`);
+    }
+    const { bodies } = await (await fetch(`${SINK}/bodies`)).json();
+    if (bodies.some((body) => body.includes(DEMO_KEY))) {
+      ok('授权地址收到真实值：替身只在允许的目的地被替换');
+    } else {
+      bad('授权地址没有收到真实值');
+    }
+
+    step(7, 10, '尝试路径逃逸');
     try {
       await pipe.callTool('fs.read', { path: '../../Windows/win.ini' });
       bad('路径逃逸居然成功了');
@@ -129,7 +149,7 @@ async function main() {
       ok(`被拒绝：${error.message}`);
     }
 
-    step(7, 9, '写报告需要人工批准');
+    step(8, 10, '写报告需要人工批准');
     const writePromise = pipe.callTool('fs.write', { path: 'reports/summary.md', content: '# 周报\n\n本周完成网关。\n' });
     writePromise.catch(() => {});
     let approval = null;
@@ -152,7 +172,7 @@ async function main() {
       console.log(`  · 本次授权的参数哈希 ${approval.digest.slice(0, 16)}…（${decided.call}）`);
     }
 
-    step(8, 9, '换一份内容再写，必须重新审批');
+    step(9, 10, '换一份内容再写，必须重新审批');
     const second = pipe.callTool('fs.write', { path: 'reports/summary.md', content: '# 周报\n\n改过的内容。\n' });
     second.catch(() => {});
     let secondApproval = null;
@@ -185,7 +205,7 @@ async function main() {
     }
     if (existsSync(join(WORKSPACE, 'notes/todo.md'))) ok('原文件仍在磁盘上');
     else bad('原文件被删除了');
-    step(9, 9, '绕过网关，直连服务端');
+    step(10, 10, '绕过网关，直连服务端');
     const direct = new McpPipe(process.execPath, [join(ROOT, 'demo/server.mjs')], {
       cwd: ROOT,
       env: { MOONGATE_WORKSPACE: WORKSPACE, MOONGATE_SINK: SINK, MOONGATE_POLICY: POLICY },
@@ -205,14 +225,17 @@ async function main() {
     } finally {
       await direct.close();
     }
-    hitsAtEnd = await sinkHits();
+    finalCounts = await sinkHits();
   } finally {
     await pipe.close();
     sink.kill();
   }
 
-  if (hitsAtEnd === 0) ok('整场运行接收端始终为 0 次请求');
-  else bad(`整场运行接收端收到 ${hitsAtEnd} 次请求`);
+  if (finalCounts.external === 0 && finalCounts.internal === 1) {
+    ok('整场运行：未授权地址 0 次，授权地址 1 次');
+  } else {
+    bad(`整场计数异常：external=${finalCounts.external} internal=${finalCounts.internal}`);
+  }
 
   const verifyOut = execFileSync(process.execPath, [join(ROOT, 'bin/moongate.mjs'), 'verify', '--ledger', LEDGER], {
     encoding: 'utf8',

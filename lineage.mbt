@@ -102,17 +102,19 @@ fn looks_like_field_name(
 }
 
 ///|
-/// Extract secret-shaped values from one string.
-///
-/// The scanner accepts runs of `[A-Za-z0-9_.-]` at least `min_len` long that
-/// contain a digit or an uppercase letter. Requiring a digit or uppercase
-/// keeps ordinary prose ("application", "workspace") out of the taint set
-/// while still admitting API keys, tokens, connection strings and long
-/// identifiers. Names on the left of `=` or `:` are excluded on purpose: they
-/// are the most common false positive, and a blocked call that only contains a
-/// variable name erodes trust in the gateway.
-pub fn extract_tokens(text : String, min_len : Int32) -> Array[SecretToken] {
-  let out : Array[SecretToken] = []
+/// A raw secret value plus its identifiers. The raw value is only ever kept in
+/// the session vault; ledger entries and errors carry the fingerprint and a
+/// four-character preview.
+pub struct RawToken {
+  value : String
+  fingerprint : String
+  preview : String
+}
+
+///|
+/// Extract raw secret-shaped values for masking. Callers must not log `value`.
+pub fn extract_raw(text : String, min_len : Int32) -> Array[RawToken] {
+  let out : Array[RawToken] = []
   let chars = text.to_array()
   let length = chars.length()
   let mut i = 0
@@ -127,6 +129,7 @@ pub fn extract_tokens(text : String, min_len : Int32) -> Array[SecretToken] {
         let token = text[start:end].to_owned()
         if token.length() <= 512 && (has_digit(token) || has_upper(token)) {
           out.push({
+            value: token,
             fingerprint: fingerprint_of(token),
             preview: token[0:4].to_owned() + "…",
           })
@@ -136,14 +139,26 @@ pub fn extract_tokens(text : String, min_len : Int32) -> Array[SecretToken] {
       i += 1
     }
   }
-  // Deduplicate: the same value usually appears several times in a config file
-  // and once is enough to carry the taint.
+  out
+}
+
+///|
+/// Extract secret-shaped values from one string.
+///
+/// The scanner accepts runs of `[A-Za-z0-9_.-]` at least `min_len` long that
+/// contain a digit or an uppercase letter. Requiring a digit or uppercase
+/// keeps ordinary prose ("application", "workspace") out of the taint set
+/// while still admitting API keys, tokens, connection strings and long
+/// identifiers. Names on the left of `=` or `:` are excluded on purpose: they
+/// are the most common false positive, and a blocked call that only contains a
+/// variable name erodes trust in the gateway.
+pub fn extract_tokens(text : String, min_len : Int32) -> Array[SecretToken] {
   let unique : Array[SecretToken] = []
   let seen : Map[String, Bool] = Map([])
-  for token in out {
-    if !seen.contains(token.fingerprint) {
-      seen.set(token.fingerprint, true)
-      unique.push(token)
+  for raw in extract_raw(text, min_len) {
+    if !seen.contains(raw.fingerprint) {
+      seen.set(raw.fingerprint, true)
+      unique.push({ fingerprint: raw.fingerprint, preview: raw.preview, })
     }
   }
   unique
@@ -222,4 +237,129 @@ pub fn find_taint(
     }
   }
   hits
+}
+
+///|
+/// Placeholder syntax used in tool results and arguments: `«mg:<fingerprint>»`.
+/// The delimiters are non-ASCII on purpose so that model-generated prose is
+/// unlikely to collide with ordinary content.
+pub fn placeholder_for(fingerprint : String) -> String {
+  "«mg:" + fingerprint + "»"
+}
+
+///|
+fn is_hex_lower(ch : Char) -> Bool {
+  (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f')
+}
+
+///|
+/// Fingerprints referenced by placeholders in one string.
+pub fn find_placeholders(text : String) -> Array[String] {
+  let out : Array[String] = []
+  let chars = text.to_array()
+  let length = chars.length()
+  let mut i = 0
+  while i < length {
+    if chars[i] == '«' && i + 4 <= length {
+      let matched = chars[i + 1] == 'm' &&
+        chars[i + 2] == 'g' &&
+        chars[i + 3] == ':'
+      if matched {
+        let start = i + 4
+        let mut end = start
+        while end < length && is_hex_lower(chars[end]) {
+          end += 1
+        }
+        if end - start == 16 && end < length && chars[end] == '»' {
+          out.push(text[start:end].to_owned())
+          i = end + 1
+          continue
+        }
+      }
+    }
+    i += 1
+  }
+  out
+}
+
+///|
+/// Replace placeholders with their real values. Returns the rewritten string
+/// and how many distinct placeholders were substituted. Unknown placeholders
+/// are left alone.
+pub fn reveal_placeholders(
+  text : String,
+  vault : Map[String, String],
+) -> (String, Int32) {
+  let mut result = text
+  let mut count = 0
+  let seen : Map[String, Bool] = Map([])
+  for fingerprint in find_placeholders(text) {
+    if seen.contains(fingerprint) {
+      continue
+    }
+    seen.set(fingerprint, true)
+    match vault.get(fingerprint) {
+      Some(value) => {
+        result = result.replace_all(old=placeholder_for(fingerprint), new=value)
+        count += 1
+      }
+      None => ()
+    }
+  }
+  (result, count)
+}
+
+///|
+/// Rewrite a JSON value by passing every string leaf through `transform`.
+pub fn map_json_strings(value : Json, transform : (String) -> String) -> Json {
+  match value {
+    String(s) => Json::string(transform(s))
+    Array(items) => {
+      let out : Array[Json] = []
+      for item in items {
+        out.push(map_json_strings(item, transform))
+      }
+      Json::array(out)
+    }
+    Object(fields) => {
+      let out : Map[String, Json] = Map([])
+      for key, item in fields {
+        out.set(key, map_json_strings(item, transform))
+      }
+      Json::object(out)
+    }
+    _ => value
+  }
+}
+
+///|
+/// Raw tokens across several strings, deduplicated by fingerprint.
+pub fn scan_raw(texts : Array[String], min_len : Int32) -> Array[RawToken] {
+  let unique : Array[RawToken] = []
+  let seen : Map[String, Bool] = Map([])
+  for text in texts {
+    for raw in extract_raw(text, min_len) {
+      if !seen.contains(raw.fingerprint) {
+        seen.set(raw.fingerprint, true)
+        unique.push(raw)
+      }
+    }
+  }
+  unique
+}
+
+///|
+/// Distinct placeholder fingerprints anywhere in a JSON value.
+pub fn placeholders_in(value : Json) -> Array[String] {
+  let unique : Array[String] = []
+  let seen : Map[String, Bool] = Map([])
+  for text in collect_strings(value) {
+    for fingerprint in find_placeholders(text) {
+      if !seen.contains(fingerprint) {
+        seen.set(fingerprint, true)
+        unique.push(fingerprint)
+      }
+    }
+  }
+  unique
 }

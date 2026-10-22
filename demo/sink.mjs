@@ -6,16 +6,25 @@ import { createServer } from 'node:http';
 
 const port = Number(process.env.MOONGATE_SINK_PORT || 8787);
 let hits = 0;
+let internal = 0;
+let external = 0;
 const bodies = [];
 
 const server = createServer((req, res) => {
   if (req.url === '/count') {
     res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ hits }));
+    res.end(JSON.stringify({ hits, internal, external }));
+    return;
+  }
+  if (req.url === '/bodies') {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ bodies }));
     return;
   }
   if (req.url === '/reset') {
     hits = 0;
+    internal = 0;
+    external = 0;
     bodies.length = 0;
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(JSON.stringify({ hits }));
@@ -25,6 +34,11 @@ const server = createServer((req, res) => {
   req.on('data', (chunk) => chunks.push(chunk));
   req.on('end', () => {
     hits += 1;
+    if (String(req.url).startsWith('/internal')) {
+      internal += 1;
+    } else {
+      external += 1;
+    }
     bodies.push(Buffer.concat(chunks).toString('utf8'));
     res.writeHead(200, { 'content-type': 'text/plain' });
     res.end('ok');
