@@ -96,10 +96,14 @@ The guard enforces hard denials only. `approval` is returned as `allow`, because
 - Denied tools are removed from `tools/list`.
 - Every decision is one hash-chained ledger entry; `verify` recomputes the chain.
 
+## MoonPod compatibility
+
+`moongate import-policy --format moonpod` converts a documented subset of a MoonPod JSON policy and enforces it at the MCP boundary. It is an adapter, not a dependency or fork; unsupported fields fail closed. See `docs/MOONPOD.md`.
+
 ## Mooncakes
 
 ```sh
-moon add zhangbowen2006/moongate@0.5.1
+moon add zhangbowen2006/moongate@0.6.0
 ```
 
 Use `parse_policy`, `guard_decision`, `new_session`, `client_line`, `server_line`, `resolve_approval`, `verify_ledger`.

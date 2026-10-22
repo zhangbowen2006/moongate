@@ -51,7 +51,7 @@ node --test test/*.test.mjs
 ```sh
 mkdir -p /tmp/mg-check && cd /tmp/mg-check
 # 建一个空 moon.mod 后：
-moon add zhangbowen2006/moongate@0.5.1
+moon add zhangbowen2006/moongate@0.6.0
 ```
 
 - [ ] 账本校验通过：`node bin/moongate.mjs verify --ledger runs/demo.jsonl`。

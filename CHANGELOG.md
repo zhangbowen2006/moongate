@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.0 — 2026-10-22
+
+新增 MoonPod 策略兼容层，把“同类项目”关系从竞争改为可验证的上层复用。
+
+### 新增
+
+- `moongate import-policy --format moonpod`：把 MoonPod JSON 策略转换为 MoonGate 策略
+- 映射 `allowed_tools`、`read_roots`、`write_roots`、`protected_paths`、`network_rules`、`approval_required_tools`、`max_calls`、`max_operation_bytes`
+- 对 `command_rules`、`resource_rules`、`tool_quotas`、`max_io_bytes`、`process.run` 失败关闭
+- `budget.max_single_bytes`：单次操作参数字节上限（用于对齐 MoonPod 的 `max_operation_bytes`）
+- 42 个单元测试（新增 3 个适配器测试、1 个单次字节测试）；18 个 Node 测试
+
+
 ## 0.5.1 — 2026-10-22
 
 材料合规补丁，运行时代码不变。针对 8 月 6 封驳回信中的“重叠未披露、作者归属、申报书格式”。

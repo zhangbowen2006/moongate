@@ -11,6 +11,7 @@ options(
         "server_line",
         "resolve_approval",
         "close",
+        "import_policy",
         "guard_create",
         "guard_check",
         "tick",

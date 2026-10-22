@@ -19,6 +19,7 @@ Usage
   moongate check --policy <file>
   moongate verify --ledger <file> [--json]
   moongate report --ledger <file> [--out <file.html>] [--policy <file>]
+  moongate import-policy --format moonpod --in <policy.json> [--out <policy.json>]
   moongate version
 
 Examples
@@ -119,7 +120,8 @@ async function commandCheck(argv) {
   console.log(`rate        ${policy.rate_max_calls} calls / ${policy.rate_window_ms} ms`);
   console.log(
     `budget      calls=${policy.budget.max_calls || '∞'} ` +
-      `bytes=${policy.budget.max_arg_bytes || '∞'} reveals=${policy.budget.max_reveals || '∞'}`,
+      `bytes=${policy.budget.max_arg_bytes || '∞'} ` +
+      `single=${policy.budget.max_single_bytes || '∞'} reveals=${policy.budget.max_reveals || '∞'}`,
   );
   console.log(`approval    ttl ${policy.approval_ttl_ms} ms, hide denied tools: ${policy.hide_denied}`);
   console.log('rules in evaluation order:');
@@ -202,6 +204,27 @@ async function commandReport(argv) {
   process.exit(verify.ok ? 0 : 1);
 }
 
+async function commandImportPolicy(argv) {
+  const { flags } = parseFlags(argv);
+  if (!flags.in) fail('import-policy requires --in <file>');
+  const format = flags.format || 'moonpod';
+  const engine = await loadEngine();
+  const source = readFileSync(resolve(flags.in), 'utf8');
+  const result = JSON.parse(engine.import_policy(source, format));
+  if (!result.ok) {
+    console.error(`import failed: ${result.error}`);
+    process.exit(1);
+  }
+  const rendered = JSON.stringify(result.policy, null, 2);
+  if (flags.out) {
+    writeFileSync(resolve(flags.out), `${rendered}\n`, 'utf8');
+    console.log(`imported ${format} policy -> ${flags.out}`);
+  } else {
+    console.log(rendered);
+  }
+  console.log(`  rules ${result.policy.rules.length}, budget ${JSON.stringify(result.policy.budget)}`);
+}
+
 async function commandVersion() {
   const engine = await loadEngine();
   console.log(engine.version());
@@ -221,6 +244,9 @@ try {
       break;
     case 'report':
       await commandReport(rest);
+      break;
+    case 'import-policy':
+      await commandImportPolicy(rest);
       break;
     case 'version':
     case '--version':

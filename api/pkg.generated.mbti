@@ -12,6 +12,8 @@ pub fn guard_check(Int32, String, String) -> String
 
 pub fn guard_create(String) -> String
 
+pub fn import_policy(String, String) -> String
+
 pub fn inspect(String) -> String
 
 pub fn report(String) -> String

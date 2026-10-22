@@ -116,7 +116,7 @@ node --test test/*.test.mjs # 10 个进程级测试
 ## 作为 MoonBit 库使用
 
 ```sh
-moon add zhangbowen2006/moongate@0.5.1
+moon add zhangbowen2006/moongate@0.6.0
 ```
 
 ```moonbit
@@ -156,6 +156,18 @@ node bin/moongate.mjs run --policy examples/policy.workspace.json \
 工具名冲突时自动加 `服务端名.` 前缀。跨进程血缘是重点：文件服务端读到的密钥被替换成占位符，网络服务端拿到占位符时同样受 `reveal` 约束。
 
 当前多服务端模式只合并 `tools`；`resources`/`prompts` 路由到第一个服务端。
+
+## 复用 MoonPod 策略（可选）
+
+MoonPod 是 MoonBit 的通用策略核心。MoonGate 提供一个兼容层，把 MoonPod 的 JSON 策略子集转换后在 MCP 边界执行：
+
+```sh
+node bin/moongate.mjs import-policy --format moonpod \
+  --in examples/policy.moonpod.json --out runs/imported.json
+node bin/moongate.mjs check --policy runs/imported.json
+```
+
+支持的字段、明确的失败关闭项与语义差异见 [docs/MOONPOD.md](docs/MOONPOD.md)。这不是依赖或 fork：MoonGate 不引用 MoonPod 代码，输出仍是普通的 MoonGate 策略。
 
 ## 两种接入方式
 
@@ -240,10 +252,10 @@ hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 
 ## 工程证据
 
-- `moon test --deny-warn`：38 个单元测试（策略顺序、血缘误报、路径规范化、guard、替身替换、审批一次性、账本篡改）
-- `node --test`：10 个真实进程测试（多服务端路由、脱敏、按目的地替换、路径穿越、绕过网关、失败关闭、篡改、报告）
+- `moon test --deny-warn`：42 个单元测试（策略顺序、血缘误报、路径规范化、guard、替身替换、审批一次性、账本篡改）
+- `node --test`：18 个 Node 测试（10 个进程测试 + 2 个 MoonPod 兼容层测试 + 6 个材料校验测试）
 - `interop/`：官方 SDK 客户端 + 官方 filesystem 服务端，4/4 通过
-- Mooncakes：`moon add zhangbowen2006/moongate@0.5.1`，已在空工程中安装并调用 `guard_decision` 验证
+- Mooncakes：`moon add zhangbowen2006/moongate@0.6.0`，已在空工程中安装并调用 `guard_decision` 验证
 - 申报材料校验：`npm run check:submission -- SUBMISSION.md`，6 个测试覆盖格式/披露/场景数量
 - CI：Linux / macOS / Windows 三平台，含演示与互操作
 

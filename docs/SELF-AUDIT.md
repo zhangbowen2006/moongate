@@ -49,6 +49,7 @@
 | 密钥替身 | 完整 | 结果脱敏为占位符；按 `reveal` 规则替换；未授权目的地拒绝 |
 | 人工审批 | 完整 | 参数摘要绑定、TTL、单次消费、拒绝/超时错误码 |
 | 账本 | 完整 | 逐事件哈希链、规范化 JSON、离线 `verify`、HTML 报告 |
+| 策略互操作 | 部分 | 导入 MoonPod JSON 策略子集；command_rules/resource_rules/tool_quotas 明确不支持 |
 | 多服务端 | 部分 | 合并 tools、按归属路由、跨进程血缘；resources/prompts 未做跨服务端路由 |
 | 第二执行点 | 完整 | 无状态 guard；审批交给网关；策略加载失败关闭；未解析占位符拒绝；与网关的硬判定一致性由穷举测试覆盖 |
 | 状态生命周期 | 完整 | 会话、in-flight、pending approval、vault 均随会话释放；审批超时由 tick 清理 |

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "allowed_tools": ["fs.read", "fs.write", "net.connect", "ticket.create"],
+  "read_roots": ["workspace"],
+  "write_roots": ["reports"],
+  "protected_paths": ["secrets"],
+  "network_rules": [
+    { "host": "api.internal", "allowed_ports": [443] }
+  ],
+  "approval_required_tools": ["fs.write"],
+  "max_calls": 25,
+  "max_operation_bytes": 4096
+}

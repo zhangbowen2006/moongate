@@ -19,7 +19,7 @@ moon search security --json --limit 15
 
 | 模块 | 它做什么 | 与 MoonGate 的重合 | MoonGate 的不同 | 代码关系 |
 | --- | --- | --- | --- | --- |
-| `yadidyc/moonpod@0.2.0` | 传输无关的策略核心：Allow/Deny/Approval、调用与字节预算、审计事件 JSON/JSONL | 策略、预算、审批、审计这些**概念** | MoonGate 是 MCP 运行时：解析 JSON-RPC、裁剪 `tools/list`、跨调用/跨服务端血缘、密钥替身、哈希链账本、服务端第二执行点 | 无复用、无依赖、无移植 |
+| `yadidyc/moonpod@0.2.0` | 传输无关的策略核心：Allow/Deny/Approval、调用与字节预算、审计事件 JSON/JSONL | 策略、预算、审批、审计这些**概念** | MoonGate 是 MCP 运行时：解析 JSON-RPC、裁剪 `tools/list`、跨调用/跨服务端血缘、密钥替身、哈希链账本、服务端第二执行点；另外提供 MoonPod JSON 策略子集的导入器（`import-policy`） | 兼容层，无代码复用、无依赖、无移植 |
 | `eisem/moon_policy@0.1.0` | RBAC 授权引擎：角色继承、属性条件、deny-by-default、lint | 规则求值与默认拒绝 | MoonGate 不实现 RBAC，也不做通用授权；规则只服务于 MCP 工具调用 | 无复用 |
 | `geniuszby/moon-policy-diff@0.2.0` | 策略回归、租户隔离、发布风险审查 | 策略变更审查 | MoonGate 不做策略 diff；它做运行时拦截 | 无复用 |
 | `123123213weqw/moon_policyforge@0.10.0` | 类型化规则求值、决策表、SHA-256 决策指纹 | 规则求值、指纹 | MoonGate 的指纹用于值血缘与账本链，不是决策表 | 无复用 |

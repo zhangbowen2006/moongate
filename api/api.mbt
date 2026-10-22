@@ -124,6 +124,7 @@ fn session_policy_summary(session : @moongate.Session) -> Json {
       @moongate.json_obj([
         ("max_calls", @moongate.json_int(policy.budget.max_calls)),
         ("max_arg_bytes", @moongate.json_int(policy.budget.max_arg_bytes)),
+        ("max_single_bytes", @moongate.json_int(policy.budget.max_single_bytes)),
         ("max_reveals", @moongate.json_int(policy.budget.max_reveals)),
       ]),
     ),
@@ -216,6 +217,19 @@ pub fn guard_check(handle : Int32, tool : String, args_json : String) -> String 
 }
 
 ///|
+pub fn import_policy(source : String, format : String) -> String {
+  if format != "moonpod" {
+    return failure("unsupported policy format: " + format)
+  }
+  let policy = @moongate.import_moonpod(source) catch {
+    @moongate.PolicyError(message) => return failure(message)
+  }
+  @moongate.json_render(
+    @moongate.json_obj([("ok", @moongate.json_bool(true)), ("policy", policy)]),
+  )
+}
+
+///|
 pub fn close(handle : Int32, now_ms : Int64) -> String {
   match session_at(handle) {
     Some(session) => {
@@ -280,7 +294,7 @@ pub fn version() -> String {
   @moongate.json_render(
     @moongate.json_obj([
       ("name", @moongate.json_str("moongate")),
-      ("version", @moongate.json_str("0.5.1")),
+      ("version", @moongate.json_str("0.6.0")),
       ("schema", @moongate.json_int(1)),
     ]),
   )

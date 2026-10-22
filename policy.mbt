@@ -63,6 +63,7 @@ pub struct RateLimit {
 pub struct Budget {
   max_calls : Int32
   max_arg_bytes : Int32
+  max_single_bytes : Int32
   max_reveals : Int32
 }
 
@@ -416,6 +417,7 @@ pub fn parse_policy(text : String) -> Policy raise PolicyError {
   }
   let mut budget_calls : Int32 = 0
   let mut budget_bytes : Int32 = 0
+  let mut budget_single : Int32 = 0
   let mut budget_reveals : Int32 = 0
   match fields.get("budget") {
     Some(Object(budget)) => {
@@ -430,6 +432,14 @@ pub fn parse_policy(text : String) -> Policy raise PolicyError {
       budget_bytes = policy_int(
         budget,
         "max_arg_bytes",
+        "policy.budget",
+        fallback=0,
+        min=0,
+        max=1073741824,
+      )
+      budget_single = policy_int(
+        budget,
+        "max_single_bytes",
         "policy.budget",
         fallback=0,
         min=0,
@@ -461,6 +471,7 @@ pub fn parse_policy(text : String) -> Policy raise PolicyError {
     budget: {
       max_calls: budget_calls,
       max_arg_bytes: budget_bytes,
+      max_single_bytes: budget_single,
       max_reveals: budget_reveals,
     },
     approval_ttl_ms: policy_int(

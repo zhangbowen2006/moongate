@@ -40,7 +40,7 @@
 
 （待填写：至少点名 3 个同类项目并说明差异，不能写“没有类似项目”。可参考 docs/OVERLAP.md，但要用自己的话。）
 
-- MoonPod（`yadidyc/moonpod`）：通用策略核心；MoonGate 是 MCP 运行时，无代码复用。
+- MoonPod（`yadidyc/moonpod`）：通用策略核心；MoonGate 提供其 JSON 策略子集的导入器，在 MCP 边界执行，无代码复用。
 - MoonPolicy（`eisem/moon_policy`）：RBAC 授权引擎；MoonGate 不做 RBAC。
 - MCP Shield / mcp-firewall：单代理网关；MoonGate 增加服务端第二执行点与密钥替身。
 
@@ -53,6 +53,6 @@
 ## 仓库与安装
 
 - GitHub：https://github.com/zhangbowen2006/moongate
-- Mooncakes：`moon add zhangbowen2006/moongate@0.5.1`
+- Mooncakes：`moon add zhangbowen2006/moongate@0.6.0`
 - 运行演示：`node demo/run.mjs`
 - 验证账本：`node bin/moongate.mjs verify --ledger runs/demo.jsonl`

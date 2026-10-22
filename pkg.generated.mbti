@@ -44,6 +44,8 @@ pub fn hex_uint(UInt32, width? : Int32) -> String
 
 pub fn id_key(Json?) -> String
 
+pub fn import_moonpod(String) -> Json raise PolicyError
+
 pub fn int_field(Json, String) -> Int32?
 
 pub fn is_egress(Policy, String) -> Bool
@@ -153,6 +155,7 @@ pub struct ArgCheck {
 pub struct Budget {
   max_calls : Int32
   max_arg_bytes : Int32
+  max_single_bytes : Int32
   max_reveals : Int32
 }
 

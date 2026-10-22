@@ -23,7 +23,7 @@
 
 ```sh
 moon check --deny-warn
-moon test --deny-warn      # 38 个单元测试
+moon test --deny-warn      # 42 个单元测试
 moon build api --target js --release --deny-warn
 ```
 
@@ -90,15 +90,16 @@ node scripts/build.mjs
 - 会话配额：调用数、参数字节、替换次数
 - 两点判定一致性穷举测试（工具 × 参数交叉组合）
 - 多服务端模式：合并工具清单、按归属路由、跨进程血缘
+- MoonPod 策略兼容层：`import-policy --format moonpod`，不支持的字段失败关闭
 - Mooncakes 库发布，服务端可直接依赖
-- 38 个单元测试 + 10 个进程级集成测试 + 第三方互操作验证
+- 42 个单元测试 + 18 个 Node 测试 + 第三方互操作验证
 
 ## Mooncakes 发布
 
 模块名：`zhangbowen2006/moongate`
 
 ```sh
-moon add zhangbowen2006/moongate@0.5.1
+moon add zhangbowen2006/moongate@0.6.0
 ```
 
 包内可直接使用 `parse_policy`、`guard_decision`、`new_session`、`client_line`、`server_line`、`resolve_approval`、`verify_ledger`、`report_ledger`。发布版本与仓库 tag 对齐。

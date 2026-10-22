@@ -597,3 +597,28 @@ test "reveal budget limits how often a secret can leave the gateway" {
     content="true",
   )
 }
+
+///|
+test "a single oversized operation is denied before the session budget" {
+  let policy = parse_policy(
+    (
+      #|{"version":1,"name":"single","default_decision":"deny",
+      #| "rules":[{"id":"read","tool":"fs.read","decision":"allow"}],
+      #| "budget":{"max_single_bytes":80}}
+    ),
+  ) catch {
+    _ => abort("bad policy")
+  }
+  let session = new_session("single", policy)
+  let line = request_line(
+    1,
+    "tools/call",
+    call_params("fs.read", json_obj([("path", json_str("x".repeat(200)))])),
+  )
+  let denied = client_line(session, line, 1000L)
+  inspect(lines_of(denied, "upstream").length(), content="0")
+  inspect(
+    lines_of(denied, "client")[0].contains("budget-operation"),
+    content="true",
+  )
+}

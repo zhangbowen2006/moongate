@@ -264,6 +264,16 @@ fn decide(
       ttl_ms: 0,
     }
   }
+  if policy.budget.max_single_bytes > 0 &&
+    arg_size > policy.budget.max_single_bytes.to_int64() {
+    return {
+      decision: "deny",
+      rule: "budget-operation",
+      reason: "single operation exceeds \{policy.budget.max_single_bytes} bytes",
+      hits: [],
+      ttl_ms: 0,
+    }
+  }
   if policy.budget.max_arg_bytes > 0 &&
     session.arg_bytes + arg_size > policy.budget.max_arg_bytes.to_int64() {
     return {
