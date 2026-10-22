@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "name": "workspace-assistant",
+  "default_decision": "deny",
+  "rules": [
+    {
+      "id": "deny-escape",
+      "tool": "fs.*",
+      "decision": "deny",
+      "reason": "path escapes the workspace",
+      "when": [
+        {
+          "arg": "path",
+          "prefix": [
+            "..",
+            "/",
+            "C://",
+            "~",
+            "\\\\"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "read-workspace",
+      "tool": "fs.read",
+      "decision": "allow",
+      "when": [
+        {
+          "arg": "path",
+          "prefix": [
+            "..",
+            "/",
+            "C://",
+            "~",
+            "\\\\"
+          ],
+          "negate": true
+        }
+      ]
+    },
+    {
+      "id": "list-workspace",
+      "tool": "fs.list",
+      "decision": "allow",
+      "when": [
+        {
+          "arg": "path",
+          "prefix": [
+            "..",
+            "/",
+            "C://",
+            "~",
+            "\\\\"
+          ],
+          "negate": true
+        }
+      ]
+    },
+    {
+      "id": "write-report",
+      "tool": "fs.write",
+      "decision": "approval",
+      "when": [
+        {
+          "arg": "path",
+          "glob": [
+            "reports/*",
+            "reports/**"
+          ]
+        }
+      ],
+      "reason": "writes outside the report directory are reviewed by a human",
+      "approval_ttl_ms": 45000
+    },
+    {
+      "id": "no-delete",
+      "tool": "fs.delete",
+      "decision": "deny",
+      "reason": "deletion is never delegated to an agent"
+    },
+    {
+      "id": "egress",
+      "tool": "net.*",
+      "decision": "approval",
+      "reason": "outbound requests need a human"
+    }
+  ],
+  "egress": {
+    "tools": [
+      "net.*",
+      "mail.*"
+    ],
+    "on_taint": "deny"
+  },
+  "sensitive": [
+    {
+      "tool": "fs.read",
+      "when": [
+        {
+          "arg": "path",
+          "glob": [
+            "**/*.env",
+            "**/secrets/**",
+            "**/id_rsa"
+          ]
+        }
+      ]
+    },
+    {
+      "tool": "vault.read"
+    }
+  ],
+  "rate": {
+    "window_ms": 60000,
+    "max_calls": 30
+  },
+  "approval_ttl_ms": 45000,
+  "min_secret_len": 12,
+  "hide_denied": true
+}
