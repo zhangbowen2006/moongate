@@ -44,7 +44,7 @@ export class McpPipe {
         const line = errBuffer.slice(0, index);
         errBuffer = errBuffer.slice(index + 1);
         this.stderr += `${line}\n`;
-        const match = line.match(/\[airlock\] ready (\{.*\})/);
+        const match = line.match(/\[moongate\] ready (\{.*\})/);
         if (match) {
           try {
             this.ready = JSON.parse(match[1]);
@@ -116,7 +116,7 @@ export class McpPipe {
     const result = await this.request('initialize', {
       protocolVersion: '2025-06-18',
       capabilities: { tools: {} },
-      clientInfo: { name: 'airlock-demo-client', version: '0.1.0' },
+      clientInfo: { name: 'moongate-demo-client', version: '0.1.0' },
     });
     this.notify('notifications/initialized', {});
     return result;

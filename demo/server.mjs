@@ -3,14 +3,37 @@
 //
 // It is a real stdio MCP server: newline-delimited JSON-RPC, an `initialize`
 // handshake, `tools/list`, and `tools/call` with actual side effects on disk
-// and on the network. Nothing about it knows Airlock exists; the gateway sits
+// and on the network. Nothing about it knows MoonGate exists; the gateway sits
 // between this server and the agent, which is what makes the demo evidence of
 // enforcement rather than a rehearsal.
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
+import * as engine from '../dist/engine.js';
 
-const WORKSPACE = resolve(process.env.AIRLOCK_WORKSPACE || join(process.cwd(), 'runs/workspace'));
-const SINK = process.env.AIRLOCK_SINK || 'http://127.0.0.1:8787';
+const WORKSPACE = resolve(process.env.MOONGATE_WORKSPACE || join(process.cwd(), 'runs/workspace'));
+const SINK = process.env.MOONGATE_SINK || 'http://127.0.0.1:8787';
+
+// Second enforcement point: the server runs the same MoonBit policy core as
+// the gateway. It enforces hard denials only; approvals and value lineage need
+// session state and stay in the gateway.
+let guard = null;
+const policyPath = process.env.MOONGATE_POLICY;
+if (policyPath) {
+  try {
+    const created = JSON.parse(engine.guard_create(readFileSync(policyPath, 'utf8')));
+    if (created.ok) {
+      guard = created.handle;
+      process.stderr.write(
+        `[demo-server] guard active: ${created.rules} rules, policy ${created.digest.slice(0, 12)}\n`,
+      );
+    } else {
+      process.stderr.write(`[demo-server] guard disabled: ${created.error}\n`);
+    }
+  } catch (error) {
+    process.stderr.write(`[demo-server] guard unavailable: ${error.message}\n`);
+  }
+}
 
 const TOOLS = [
   {
@@ -129,7 +152,7 @@ async function handle(message) {
       result: {
         protocolVersion: params?.protocolVersion || '2025-06-18',
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'airlock-demo-workspace', version: '0.1.0' },
+        serverInfo: { name: 'moongate-demo-workspace', version: '0.1.0' },
       },
     });
     return;
@@ -144,7 +167,23 @@ async function handle(message) {
   }
   if (method === 'tools/call') {
     try {
-      const text = await callTool(params?.name, params?.arguments ?? {});
+      const args = params?.arguments ?? {};
+      if (guard !== null) {
+        const gate = JSON.parse(engine.guard_check(guard, params?.name ?? '', JSON.stringify(args)));
+        if (gate.decision === 'deny') {
+          process.stderr.write(`[demo-server] guard denied ${params?.name} (${gate.rule})\n`);
+          send({
+            jsonrpc: '2.0',
+            id,
+            result: {
+              content: [{ type: 'text', text: `Blocked by MoonGate guard (${gate.rule}): ${gate.reason}` }],
+              isError: true,
+            },
+          });
+          return;
+        }
+      }
+      const text = await callTool(params?.name, args);
       send({
         jsonrpc: '2.0',
         id,

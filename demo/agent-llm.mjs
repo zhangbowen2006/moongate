@@ -2,12 +2,12 @@
 // Model-driven agent.
 //
 // This is the "real agent" path: an OpenAI-compatible chat model decides which
-// MCP tools to call, Airlock decides whether those calls happen. It is
+// MCP tools to call, MoonGate decides whether those calls happen. It is
 // optional because it needs a key — the deterministic demo in demo/run.mjs
 // covers the same ground without one.
 //
-//   AIRLOCK_LLM_API_KEY=sk-... node demo/agent-llm.mjs
-//   AIRLOCK_LLM_BASE_URL=https://api.deepseek.com/v1 AIRLOCK_LLM_MODEL=deepseek-chat ...
+//   MOONGATE_LLM_API_KEY=sk-... node demo/agent-llm.mjs
+//   MOONGATE_LLM_BASE_URL=https://api.deepseek.com/v1 MOONGATE_LLM_MODEL=deepseek-chat ...
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -21,13 +21,13 @@ const POLICY = join(ROOT, 'examples/policy.workspace.json');
 const SINK_PORT = 8789;
 const SINK = `http://127.0.0.1:${SINK_PORT}`;
 
-const key = process.env.AIRLOCK_LLM_API_KEY || process.env.OPENAI_API_KEY;
-const baseUrl = (process.env.AIRLOCK_LLM_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
-const model = process.env.AIRLOCK_LLM_MODEL || 'gpt-4o-mini';
+const key = process.env.MOONGATE_LLM_API_KEY || process.env.OPENAI_API_KEY;
+const baseUrl = (process.env.MOONGATE_LLM_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
+const model = process.env.MOONGATE_LLM_MODEL || 'gpt-4o-mini';
 
 if (!key) {
-  console.error('缺少模型密钥。请设置 AIRLOCK_LLM_API_KEY（或 OPENAI_API_KEY）后重试。');
-  console.error('可选：AIRLOCK_LLM_BASE_URL 指向任意 OpenAI 兼容接口，AIRLOCK_LLM_MODEL 指定模型。');
+  console.error('缺少模型密钥。请设置 MOONGATE_LLM_API_KEY（或 OPENAI_API_KEY）后重试。');
+  console.error('可选：MOONGATE_LLM_BASE_URL 指向任意 OpenAI 兼容接口，MOONGATE_LLM_MODEL 指定模型。');
   process.exit(2);
 }
 
@@ -56,18 +56,18 @@ async function main() {
   seed();
   const sink = spawn(process.execPath, [join(ROOT, 'demo/sink.mjs')], {
     stdio: ['ignore', 'ignore', 'pipe'],
-    env: { ...process.env, AIRLOCK_SINK_PORT: String(SINK_PORT) },
+    env: { ...process.env, MOONGATE_SINK_PORT: String(SINK_PORT) },
     windowsHide: true,
   });
   await new Promise((resolvePromise) => sink.stderr.on('data', (chunk) => String(chunk).includes('listening') && resolvePromise()));
 
   const pipe = new McpPipe(
     process.execPath,
-    [join(ROOT, 'bin/airlock.mjs'), 'run', '--policy', POLICY, '--ledger', LEDGER, '--', process.execPath, join(ROOT, 'demo/server.mjs')],
+    [join(ROOT, 'bin/moongate.mjs'), 'run', '--policy', POLICY, '--ledger', LEDGER, '--', process.execPath, join(ROOT, 'demo/server.mjs')],
     {
       cwd: ROOT,
-      env: { AIRLOCK_WORKSPACE: WORKSPACE, AIRLOCK_SINK: SINK },
-      onNotice: (line) => console.log(`  · ${line.replace('[airlock] ', '')}`),
+      env: { MOONGATE_WORKSPACE: WORKSPACE, MOONGATE_SINK: SINK },
+      onNotice: (line) => console.log(`  · ${line.replace('[moongate] ', '')}`),
     },
   );
   const ready = await waitForReady(pipe);
@@ -125,7 +125,7 @@ async function main() {
   await pipe.close();
   sink.kill();
   console.log(`账本：${LEDGER}`);
-  console.log(`报告：node bin/airlock.mjs report --ledger ${LEDGER}`);
+  console.log(`报告：node bin/moongate.mjs report --ledger ${LEDGER}`);
 }
 
 main().catch((error) => {

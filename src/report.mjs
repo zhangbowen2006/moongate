@@ -69,7 +69,7 @@ export function renderReport({ report, verify, ledgerPath, policyPath }) {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Airlock 运行报告 · ${escapeHtml(report.policy.name || 'unnamed')}</title>
+<title>MoonGate 运行报告 · ${escapeHtml(report.policy.name || 'unnamed')}</title>
 <style>
   :root { color-scheme: light; --ink:#16202e; --muted:#6b7a90; --line:#dde3ef; --bg:#f4f6fb; }
   * { box-sizing: border-box; }
@@ -115,7 +115,7 @@ export function renderReport({ report, verify, ledgerPath, policyPath }) {
 <div class="wrap">
   <header>
     <div>
-      <h1>Airlock 运行报告</h1>
+      <h1>MoonGate 运行报告</h1>
       <div class="sub">策略 <strong>${escapeHtml(report.policy.name || 'unnamed')}</strong> ·
         指纹 <span class="mono">${escapeHtml((report.policy.digest || '').slice(0, 16))}</span> ·
         ${report.entries} 条账本记录</div>
@@ -148,11 +148,11 @@ export function renderReport({ report, verify, ledgerPath, policyPath }) {
   <ol class="timeline">${timelineRows}</ol>
 
   <footer>
-    校验命令：<code>node bin/airlock.mjs verify --ledger ${escapeHtml(ledgerPath || '<run.jsonl>')}</code><br/>
+    校验命令：<code>node bin/moongate.mjs verify --ledger ${escapeHtml(ledgerPath || '<run.jsonl>')}</code><br/>
     账本每行都包含前一条的哈希，修改任意一行都会使校验失败。
   </footer>
 </div>
-<script type="application/json" id="airlock-report">${JSON.stringify({ report, verify }).replace(/</g, '\\u003c')}</script>
+<script type="application/json" id="moongate-report">${JSON.stringify({ report, verify }).replace(/</g, '\\u003c')}</script>
 </body>
 </html>`;
 }

@@ -12,7 +12,7 @@ const PAGE = `<!doctype html>
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Airlock · 审批</title>
+<title>MoonGate · 审批</title>
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
@@ -45,7 +45,7 @@ const PAGE = `<!doctype html>
 </head>
 <body>
 <header>
-  <h1><span class="dot"></span>Airlock 审批台</h1>
+  <h1><span class="dot"></span>MoonGate 审批台</h1>
   <div class="sub">每次审批只授权一次调用，参数哈希不同即失效。</div>
 </header>
 <main id="list"><div class="empty">正在读取状态…</div></main>

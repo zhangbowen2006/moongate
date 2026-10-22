@@ -11,18 +11,18 @@ import { loadEngine, projectRoot } from '../src/engine.mjs';
 import { runGateway } from '../src/gateway.mjs';
 import { renderReport } from '../src/report.mjs';
 
-const HELP = `airlock — in-path policy and data-provenance gateway for MCP agents
+const HELP = `moongate — in-path policy and data-provenance gateway for MCP agents
 
 Usage
-  airlock run --policy <file> [--ledger <file>] [--port <n>] [--no-ui] -- <upstream command...>
-  airlock check --policy <file>
-  airlock verify --ledger <file> [--json]
-  airlock report --ledger <file> [--out <file.html>] [--policy <file>]
-  airlock version
+  moongate run --policy <file> [--ledger <file>] [--port <n>] [--no-ui] -- <upstream command...>
+  moongate check --policy <file>
+  moongate verify --ledger <file> [--json]
+  moongate report --ledger <file> [--out <file.html>] [--policy <file>]
+  moongate version
 
 Examples
-  airlock run --policy examples/policy.workspace.json -- node demo/server.mjs
-  airlock run --policy examples/policy.workspace.json -- npx -y @modelcontextprotocol/server-filesystem ./workspace
+  moongate run --policy examples/policy.workspace.json -- node demo/server.mjs
+  moongate run --policy examples/policy.workspace.json -- npx -y @modelcontextprotocol/server-filesystem ./workspace
 
 The gateway speaks MCP over stdio. Point any MCP client at this command instead
 of the upstream server; denied calls never reach the server.
@@ -55,7 +55,7 @@ function parseFlags(argv) {
 }
 
 function fail(message) {
-  console.error(`airlock: ${message}`);
+  console.error(`moongate: ${message}`);
   process.exit(2);
 }
 
@@ -201,9 +201,9 @@ try {
       console.log(HELP);
       break;
     default:
-      fail(`unknown command: ${command} (try: airlock help)`);
+      fail(`unknown command: ${command} (try: moongate help)`);
   }
 } catch (error) {
-  console.error(`airlock: ${error.message}`);
+  console.error(`moongate: ${error.message}`);
   process.exit(2);
 }

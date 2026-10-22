@@ -4,7 +4,7 @@
 // effect never happened.
 import { createServer } from 'node:http';
 
-const port = Number(process.env.AIRLOCK_SINK_PORT || 8787);
+const port = Number(process.env.MOONGATE_SINK_PORT || 8787);
 let hits = 0;
 const bodies = [];
 

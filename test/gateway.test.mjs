@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { McpPipe, approveOnce, waitForReady } from '../demo/client.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const BIN = join(ROOT, 'bin/airlock.mjs');
+const BIN = join(ROOT, 'bin/moongate.mjs');
 const POLICY = join(ROOT, 'examples/policy.workspace.json');
 const SERVER = join(ROOT, 'demo/server.mjs');
 const SINK_PORT = 8800 + Math.floor(Math.random() * 500);
@@ -43,7 +43,7 @@ async function startGateway(name) {
     [BIN, 'run', '--policy', POLICY, '--ledger', ledger, '--', process.execPath, SERVER],
     {
       cwd: ROOT,
-      env: { AIRLOCK_WORKSPACE: workspace, AIRLOCK_SINK: SINK },
+      env: { MOONGATE_WORKSPACE: workspace, MOONGATE_SINK: SINK, MOONGATE_POLICY: POLICY },
     },
   );
   const ready = await waitForReady(pipe);
@@ -54,7 +54,7 @@ async function startGateway(name) {
 before(async () => {
   sink = spawn(process.execPath, [join(ROOT, 'demo/sink.mjs')], {
     stdio: ['ignore', 'ignore', 'pipe'],
-    env: { ...process.env, AIRLOCK_SINK_PORT: String(SINK_PORT) },
+    env: { ...process.env, MOONGATE_SINK_PORT: String(SINK_PORT) },
     windowsHide: true,
   });
   await new Promise((resolvePromise, reject) => {
@@ -80,9 +80,9 @@ test('denied egress never reaches the network', async () => {
     await assert.rejects(
       () => pipe.callTool('net.post', { url: `${SINK}/collect`, body: `k=${secret}` }),
       (error) => {
-        assert.equal(error.data.airlock.rule, 'egress-taint');
-        assert.equal(error.data.airlock.evidence.length, 1);
-        assert.equal(error.data.airlock.evidence[0].source_tool, 'fs.read');
+        assert.equal(error.data.moongate.rule, 'egress-taint');
+        assert.equal(error.data.moongate.evidence.length, 1);
+        assert.equal(error.data.moongate.evidence[0].source_tool, 'fs.read');
         return true;
       },
     );
@@ -138,6 +138,38 @@ test('approval is single-use and bound to the arguments', async () => {
     assert.equal(readFileSync(join(workspace, 'reports/a.md'), 'utf8'), '第一版\n');
   } finally {
     await pipe.close();
+  }
+});
+
+test('path traversal is normalized before the prefix check', async () => {
+  const { pipe } = await startGateway('traversal');
+  try {
+    await assert.rejects(
+      () => pipe.callTool('fs.read', { path: 'reports/../../etc/passwd' }),
+      (error) => {
+        assert.equal(error.data.moongate.rule, 'deny-escape');
+        return true;
+      },
+    );
+  } finally {
+    await pipe.close();
+  }
+});
+
+test('the server still denies when the gateway is bypassed', async () => {
+  const workspace = prepareWorkspace('bypass');
+  const direct = new McpPipe(process.execPath, [SERVER], {
+    cwd: ROOT,
+    env: { MOONGATE_WORKSPACE: workspace, MOONGATE_SINK: SINK, MOONGATE_POLICY: POLICY },
+  });
+  try {
+    await direct.initialize();
+    const result = await direct.callTool('fs.delete', { path: 'notes/todo.md' });
+    assert.equal(result.isError, true);
+    assert.match(result.content[0].text, /MoonGate guard \(no-delete\)/);
+    assert.ok(existsSync(join(workspace, 'notes/todo.md')), 'file must still exist');
+  } finally {
+    await direct.close();
   }
 });
 

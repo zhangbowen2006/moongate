@@ -95,7 +95,7 @@ export async function runGateway(options) {
           if (child.stdin.writable) {
             child.stdin.write(`${action.line}\n`);
           } else {
-            console.error('[airlock] upstream stdin is closed; dropping a call');
+            console.error('[moongate] upstream stdin is closed; dropping a call');
           }
           break;
         case 'client':
@@ -104,7 +104,7 @@ export async function runGateway(options) {
         case 'approval':
           pending.set(action.call, action);
           console.error(
-            `[airlock] approval required: ${action.tool} (${action.call}) rule=${action.rule}` +
+            `[moongate] approval required: ${action.tool} (${action.call}) rule=${action.rule}` +
               (broker ? ` -> ${broker.url}` : ''),
           );
           break;
@@ -112,10 +112,10 @@ export async function runGateway(options) {
           pending.delete(action.call);
           break;
         case 'notice':
-          console.error(`[airlock] ${action.message}`);
+          console.error(`[moongate] ${action.message}`);
           break;
         default:
-          console.error(`[airlock] unknown action kind: ${action.kind}`);
+          console.error(`[moongate] unknown action kind: ${action.kind}`);
       }
     }
   };
@@ -124,7 +124,7 @@ export async function runGateway(options) {
     try {
       broker = await startApprovalBroker({ getState: state, decide, port });
     } catch (error) {
-      console.error(`[airlock] approval UI unavailable: ${error.message}`);
+      console.error(`[moongate] approval UI unavailable: ${error.message}`);
     }
   }
 
@@ -132,7 +132,7 @@ export async function runGateway(options) {
     try {
       apply(JSON.parse(engine.tick(handle, BigInt(Date.now()))));
     } catch (error) {
-      console.error(`[airlock] tick failed: ${error.message}`);
+      console.error(`[moongate] tick failed: ${error.message}`);
     }
   }, 250);
 
@@ -145,12 +145,12 @@ export async function runGateway(options) {
         if (action.kind === 'ledger') writeLedger(action.line);
       }
     } catch (error) {
-      console.error(`[airlock] could not write the closing ledger entry: ${error.message}`);
+      console.error(`[moongate] could not write the closing ledger entry: ${error.message}`);
     }
     exitCode = code;
     const shutdown = broker ? broker.close() : Promise.resolve();
     shutdown.finally(() => {
-      console.error(`[airlock] stopped; ledger=${ledgerPath}`);
+      console.error(`[moongate] stopped; ledger=${ledgerPath}`);
       // Flush stdout before exiting: it carries protocol responses, and
       // process.exit() would otherwise drop buffered writes on Windows.
       process.stdout.write('', () => process.exit(exitCode));
@@ -162,7 +162,7 @@ export async function runGateway(options) {
       const error = {
         jsonrpc: '2.0',
         id: null,
-        error: { code: -32600, message: 'Airlock: message exceeds the 8 MiB line limit' },
+        error: { code: -32600, message: 'MoonGate: message exceeds the 8 MiB line limit' },
       };
       process.stdout.write(`${JSON.stringify(error)}\n`);
       return;
@@ -170,7 +170,7 @@ export async function runGateway(options) {
     try {
       apply(JSON.parse(engine.client_line(handle, line, BigInt(Date.now()))));
     } catch (error) {
-      console.error(`[airlock] engine failure on a client line: ${error.message}`);
+      console.error(`[moongate] engine failure on a client line: ${error.message}`);
       finish(3);
     }
   };
@@ -179,7 +179,7 @@ export async function runGateway(options) {
     try {
       apply(JSON.parse(engine.server_line(handle, line, BigInt(Date.now()))));
     } catch (error) {
-      console.error(`[airlock] engine failure on an upstream line: ${error.message}`);
+      console.error(`[moongate] engine failure on an upstream line: ${error.message}`);
       finish(3);
     }
   };
@@ -194,7 +194,7 @@ export async function runGateway(options) {
   serverReader.on('line', onServerLine);
 
   child.on('error', (error) => {
-    console.error(`[airlock] cannot start upstream ${upstreamCommand}: ${error.message}`);
+    console.error(`[moongate] cannot start upstream ${upstreamCommand}: ${error.message}`);
     finish(2);
   });
   let upstreamExit = null;
@@ -205,7 +205,7 @@ export async function runGateway(options) {
   // before its last response has been processed.
   serverReader.on('close', () => {
     if (upstreamExit && upstreamExit.signal) {
-      console.error(`[airlock] upstream terminated by ${upstreamExit.signal}`);
+      console.error(`[moongate] upstream terminated by ${upstreamExit.signal}`);
     }
     finish(upstreamExit && upstreamExit.code === 0 ? 0 : 1);
   });
@@ -228,6 +228,6 @@ export async function runGateway(options) {
     upstream: upstreamCommand,
     pid: process.pid,
   };
-  console.error(`[airlock] ready ${JSON.stringify(ready)}`);
+  console.error(`[moongate] ready ${JSON.stringify(ready)}`);
   return { ready, state, decide, finish, child };
 }

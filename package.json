@@ -1,14 +1,14 @@
 {
-  "name": "airlock",
-  "version": "0.1.0",
+  "name": "moongate",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "In-path policy enforcement and data-provenance gateway for MCP agents",
+  "description": "Dual-point policy enforcement for MCP tools (gateway + in-server guard)",
   "engines": {
     "node": ">=22"
   },
   "bin": {
-    "airlock": "bin/airlock.mjs"
+    "moongate": "bin/moongate.mjs"
   },
   "scripts": {
     "build": "node scripts/build.mjs",
