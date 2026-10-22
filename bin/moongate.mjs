@@ -105,6 +105,7 @@ async function commandCheck(argv) {
   console.log(`default     ${policy.default}`);
   console.log(`rules       ${policy.rule_count} (${policy.rules.length} listed)`);
   console.log(`sensitive   ${policy.sensitive_count} source rule(s)`);
+  console.log(`secrets     mask=${policy.mask_secrets}, reveal rules=${policy.reveal_count}`);
   console.log(`egress      ${policy.egress_tools.join(', ') || '(none)'} -> ${policy.on_taint} on taint`);
   console.log(`rate        ${policy.rate_max_calls} calls / ${policy.rate_window_ms} ms`);
   console.log(`approval    ttl ${policy.approval_ttl_ms} ms, hide denied tools: ${policy.hide_denied}`);

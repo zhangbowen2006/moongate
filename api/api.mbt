@@ -106,6 +106,8 @@ fn session_policy_summary(session : @moongate.Session) -> Json {
     ("on_taint", @moongate.json_str(policy.on_taint)),
     ("rule_count", @moongate.json_int(policy.rules.length())),
     ("sensitive_count", @moongate.json_int(policy.sensitive.length())),
+    ("mask_secrets", @moongate.json_bool(policy.mask_secrets)),
+    ("reveal_count", @moongate.json_int(policy.reveal.length())),
     ("rate_window_ms", @moongate.json_int(policy.rate.window_ms)),
     ("rate_max_calls", @moongate.json_int(policy.rate.max_calls)),
     ("approval_ttl_ms", @moongate.json_int(policy.approval_ttl_ms)),
