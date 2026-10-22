@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "name": "third-party-filesystem",
+  "default_decision": "deny",
+  "rules": [
+    {
+      "id": "deny-escape",
+      "tool": "*",
+      "decision": "deny",
+      "reason": "path escapes the allowed directory",
+      "when": [{ "arg": "path", "prefix": ["..", "/", "~"], "negate": false }]
+    },
+    { "id": "read", "tool": "read_file", "decision": "allow" },
+    { "id": "list", "tool": "list_directory", "decision": "allow" },
+    { "id": "info", "tool": "get_file_info", "decision": "allow" },
+    { "id": "write", "tool": "write_file", "decision": "deny", "reason": "writes are out of scope for this agent" },
+    { "id": "delete", "tool": "move_file", "decision": "deny" }
+  ],
+  "rate": { "window_ms": 60000, "max_calls": 40 }
+}
