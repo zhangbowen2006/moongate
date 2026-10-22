@@ -52,6 +52,7 @@ node bin/moongate.mjs report --ledger runs/demo.jsonl
 - MoonGate 把同一份 MoonBit 策略编译进服务端，工具函数执行前再判一次；演示里直连服务端仍被拒绝。
 - 判定核心一套代码，网关与 guard 共用；硬判定一致性由穷举测试覆盖；MoonBit 可编译到 JS/Wasm，不绑定解释器运行时。
 - 密钥替身发生在 MCP 工具调用边界，占位符可跨调用流转，替换目标逐条授权；凭据代理通常只在 HTTP 出口替换 header。
+- 一个网关合并多个 MCP 服务端的工具并按归属路由，血缘跨进程；多数对比项目是单服务端代理。
 
 ## 与上一版的差异
 

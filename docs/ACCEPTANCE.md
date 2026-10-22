@@ -51,7 +51,7 @@ report: .../runs/demo.report.html
 
 演示内部断言（任一失败则退出码非 0）：
 
-1. `tools/list` 不包含 `fs.delete`；
+1. `tools/list` 合并了两个服务端的工具，且不包含 `fs.delete`；
 2. 读取 `config/.env` 后，客户端只看到 `«mg:…»`，明文没有进入上下文；
 3. 替身发往未授权地址返回 `secret-reveal`，接收端计数 0；
 4. 替身发往已授权地址，网关替换回真值，接收端收到真实密钥且计数 1；
