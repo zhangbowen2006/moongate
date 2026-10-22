@@ -470,3 +470,130 @@ fn find_substring(text : String, needle : String) -> Int32 {
     None => 0
   }
 }
+
+///|
+test "call and argument budgets stop a session before it runs wild" {
+  let call_policy = parse_policy(
+    (
+      #|{"version":1,"name":"budget-calls","default_decision":"deny",
+      #| "rules":[{"id":"read","tool":"fs.read","decision":"allow"}],
+      #| "budget":{"max_calls":2}}
+    ),
+  ) catch {
+    _ => abort("bad policy")
+  }
+  let session = new_session("budget-calls", call_policy)
+  let line = request_line(
+    1,
+    "tools/call",
+    call_params("fs.read", json_obj([("path", json_str("a.md"))])),
+  )
+  inspect(
+    lines_of(client_line(session, line, 1000L), "upstream").length(),
+    content="1",
+  )
+  inspect(
+    lines_of(client_line(session, line, 1001L), "upstream").length(),
+    content="1",
+  )
+  let third = client_line(session, line, 1002L)
+  inspect(lines_of(third, "upstream").length(), content="0")
+  inspect(lines_of(third, "client")[0].contains("budget-calls"), content="true")
+
+  let bytes_policy = parse_policy(
+    (
+      #|{"version":1,"name":"budget-bytes","default_decision":"deny",
+      #| "rules":[{"id":"read","tool":"fs.read","decision":"allow"}],
+      #| "budget":{"max_arg_bytes":80}}
+    ),
+  ) catch {
+    _ => abort("bad policy")
+  }
+  let small = new_session("budget-bytes", bytes_policy)
+  let big = request_line(
+    2,
+    "tools/call",
+    call_params("fs.read", json_obj([("path", json_str("x".repeat(200)))])),
+  )
+  let denied = client_line(small, big, 1000L)
+  inspect(lines_of(denied, "upstream").length(), content="0")
+  inspect(
+    lines_of(denied, "client")[0].contains("budget-bytes"),
+    content="true",
+  )
+}
+
+///|
+test "reveal budget limits how often a secret can leave the gateway" {
+  let policy = parse_policy(
+    (
+      #|{"version":1,"name":"budget-reveals","default_decision":"deny",
+      #| "rules":[{"id":"read","tool":"fs.read","decision":"allow"},
+      #|          {"id":"post","tool":"net.post","decision":"allow"}],
+      #| "sensitive":[{"tool":"fs.read","when":[{"arg":"path","glob":["**/*.env"]}]}],
+      #| "reveal":[{"id":"internal","tool":"net.post"}],
+      #| "budget":{"max_reveals":1},
+      #| "min_secret_len":12}
+    ),
+  ) catch {
+    _ => abort("bad policy")
+  }
+  let session = new_session("budget-reveals", policy)
+  let placeholder = placeholder_for(fingerprint_of("sk-live-abcd1234efgh"))
+  let call = request_line(
+    3,
+    "tools/call",
+    call_params(
+      "net.post",
+      json_obj([
+        ("url", json_str("http://internal/collect")),
+        ("body", json_str(placeholder)),
+      ]),
+    ),
+  )
+  // The vault has to contain the value; seed it through a sensitive read.
+  let read = client_line(
+    session,
+    request_line(
+      1,
+      "tools/call",
+      call_params("fs.read", json_obj([("path", json_str("config/.env"))])),
+    ),
+    1000L,
+  )
+  ignore(lines_of(read, "upstream"))
+  ignore(
+    server_line(
+      session,
+      json_render(
+        json_obj([
+          ("jsonrpc", json_str("2.0")),
+          ("id", json_int(1)),
+          (
+            "result",
+            json_obj([
+              (
+                "content",
+                json_arr([
+                  json_obj([
+                    ("type", json_str("text")),
+                    ("text", json_str("KEY=sk-live-abcd1234efgh")),
+                  ]),
+                ]),
+              ),
+            ]),
+          ),
+        ]),
+      ),
+      1001L,
+    ),
+  )
+  let first = client_line(session, call, 1002L)
+  inspect(lines_of(first, "upstream").length(), content="1")
+  let second = client_line(session, call, 1003L)
+  inspect(lines_of(second, "upstream").length(), content="0")
+  inspect(
+    lines_of(second, "client")[0].contains("budget-reveals"),
+    content="true",
+  )
+}

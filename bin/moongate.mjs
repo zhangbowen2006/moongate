@@ -108,6 +108,10 @@ async function commandCheck(argv) {
   console.log(`secrets     mask=${policy.mask_secrets}, reveal rules=${policy.reveal_count}`);
   console.log(`egress      ${policy.egress_tools.join(', ') || '(none)'} -> ${policy.on_taint} on taint`);
   console.log(`rate        ${policy.rate_max_calls} calls / ${policy.rate_window_ms} ms`);
+  console.log(
+    `budget      calls=${policy.budget.max_calls || '∞'} ` +
+      `bytes=${policy.budget.max_arg_bytes || '∞'} reveals=${policy.budget.max_reveals || '∞'}`,
+  );
   console.log(`approval    ttl ${policy.approval_ttl_ms} ms, hide denied tools: ${policy.hide_denied}`);
   console.log('rules in evaluation order:');
   for (const rule of policy.rules) {
@@ -117,6 +121,24 @@ async function commandCheck(argv) {
   // A cheap but useful lint: an earlier unconditional rule with the same tool
   // pattern makes a later rule unreachable. Catch the obvious case instead of
   // pretending to solve glob subsumption.
+  if (policy.default === 'allow') {
+    console.warn('warning: default decision is allow; a missing rule will permit the call');
+  }
+  if (!policy.mask_secrets && policy.sensitive_count > 0) {
+    console.warn('warning: mask_secrets is false, sensitive values will reach the model');
+  }
+  for (const rule of policy.rules) {
+    if (rule.decision === 'allow' && (rule.tool === '*' || rule.tool === '**')) {
+      console.warn(`warning: rule "${rule.id}" allows every tool`);
+    }
+  }
+  for (const rule of policy.reveal || []) {
+    if (!rule.conditional) {
+      console.warn(`warning: reveal rule "${rule.id}" applies to every destination`);
+    } else if (rule.tool === '*' || rule.tool === '**') {
+      console.warn(`warning: reveal rule "${rule.id}" targets every tool`);
+    }
+  }
   const seen = new Map();
   for (const rule of policy.rules) {
     if (rule.conditional) continue;

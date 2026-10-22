@@ -150,6 +150,12 @@ pub struct ArgCheck {
   normalize_path : Bool
 }
 
+pub struct Budget {
+  max_calls : Int32
+  max_arg_bytes : Int32
+  max_reveals : Int32
+}
+
 type Inflight
 
 type PendingApproval
@@ -165,6 +171,7 @@ pub struct Policy {
   egress_tools : Array[String]
   on_taint : String
   rate : RateLimit
+  budget : Budget
   approval_ttl_ms : Int32
   min_secret_len : Int32
   hide_denied : Bool
@@ -244,6 +251,9 @@ pub struct Session {
   mut approval_requests : Int32
   mut forwarded : Int32
   mut tainted_values : Int32
+  mut total_calls : Int32
+  mut arg_bytes : Int64
+  mut reveal_count : Int32
 }
 
 pub struct TaintHit {

@@ -58,6 +58,15 @@ pub struct RateLimit {
 }
 
 ///|
+/// Session-wide quotas. Zero disables a quota; a missing budget should not
+/// lock a session, so zero never means "allow nothing".
+pub struct Budget {
+  max_calls : Int32
+  max_arg_bytes : Int32
+  max_reveals : Int32
+}
+
+///|
 pub struct Policy {
   name : String
   digest : String
@@ -69,6 +78,7 @@ pub struct Policy {
   egress_tools : Array[String]
   on_taint : String
   rate : RateLimit
+  budget : Budget
   approval_ttl_ms : Int32
   min_secret_len : Int32
   hide_denied : Bool
@@ -404,6 +414,39 @@ pub fn parse_policy(text : String) -> Policy raise PolicyError {
     Some(_) => policy_fail("policy.rate: expected object")
     None => ()
   }
+  let mut budget_calls : Int32 = 0
+  let mut budget_bytes : Int32 = 0
+  let mut budget_reveals : Int32 = 0
+  match fields.get("budget") {
+    Some(Object(budget)) => {
+      budget_calls = policy_int(
+        budget,
+        "max_calls",
+        "policy.budget",
+        fallback=0,
+        min=0,
+        max=10000000,
+      )
+      budget_bytes = policy_int(
+        budget,
+        "max_arg_bytes",
+        "policy.budget",
+        fallback=0,
+        min=0,
+        max=1073741824,
+      )
+      budget_reveals = policy_int(
+        budget,
+        "max_reveals",
+        "policy.budget",
+        fallback=0,
+        min=0,
+        max=1000000,
+      )
+    }
+    Some(_) => policy_fail("policy.budget: expected object")
+    None => ()
+  }
   {
     name: policy_optional_text(fields, "name", "unnamed"),
     digest: sha256_hex(json_canonical(root)),
@@ -415,6 +458,11 @@ pub fn parse_policy(text : String) -> Policy raise PolicyError {
     egress_tools,
     on_taint,
     rate: { window_ms: rate_window, max_calls: rate_max, },
+    budget: {
+      max_calls: budget_calls,
+      max_arg_bytes: budget_bytes,
+      max_reveals: budget_reveals,
+    },
     approval_ttl_ms: policy_int(
       fields,
       "approval_ttl_ms",

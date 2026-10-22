@@ -23,7 +23,7 @@
 
 ```sh
 moon check --deny-warn
-moon test --deny-warn      # 35 个单元测试
+moon test --deny-warn      # 38 个单元测试
 moon build api --target js --release --deny-warn
 ```
 
@@ -87,8 +87,10 @@ node scripts/build.mjs
 - 路径规范化（修掉 `reports/../../etc/passwd` 这类前缀绕过）
 - 服务端 guard：同一份策略的第二个执行点，绕过网关仍生效
 - 密钥替身：结果脱敏、按 `reveal` 规则替换、未授权目的地拒绝
+- 会话配额：调用数、参数字节、替换次数
+- 两点判定一致性穷举测试（工具 × 参数交叉组合）
 - Mooncakes 库发布，服务端可直接依赖
-- 35 个单元测试 + 9 个进程级集成测试 + 第三方互操作验证
+- 38 个单元测试 + 9 个进程级集成测试 + 第三方互操作验证
 
 ## Mooncakes 发布
 

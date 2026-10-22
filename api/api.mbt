@@ -85,6 +85,16 @@ fn policy_summary(session : @moongate.Session) -> Json {
 ///|
 fn session_policy_summary(session : @moongate.Session) -> Json {
   let policy = session.policy
+  let reveal_rules : Array[Json] = []
+  for rule in policy.reveal {
+    reveal_rules.push(
+      @moongate.json_obj([
+        ("id", @moongate.json_str(rule.id)),
+        ("tool", @moongate.json_str(rule.tool)),
+        ("conditional", @moongate.json_bool(!rule.checks.is_empty())),
+      ]),
+    )
+  }
   let rules : Array[Json] = []
   for rule in policy.rules {
     rules.push(
@@ -108,6 +118,15 @@ fn session_policy_summary(session : @moongate.Session) -> Json {
     ("sensitive_count", @moongate.json_int(policy.sensitive.length())),
     ("mask_secrets", @moongate.json_bool(policy.mask_secrets)),
     ("reveal_count", @moongate.json_int(policy.reveal.length())),
+    ("reveal", @moongate.json_arr(reveal_rules)),
+    (
+      "budget",
+      @moongate.json_obj([
+        ("max_calls", @moongate.json_int(policy.budget.max_calls)),
+        ("max_arg_bytes", @moongate.json_int(policy.budget.max_arg_bytes)),
+        ("max_reveals", @moongate.json_int(policy.budget.max_reveals)),
+      ]),
+    ),
     ("rate_window_ms", @moongate.json_int(policy.rate.window_ms)),
     ("rate_max_calls", @moongate.json_int(policy.rate.max_calls)),
     ("approval_ttl_ms", @moongate.json_int(policy.approval_ttl_ms)),
@@ -261,7 +280,7 @@ pub fn version() -> String {
   @moongate.json_render(
     @moongate.json_obj([
       ("name", @moongate.json_str("moongate")),
-      ("version", @moongate.json_str("0.3.0")),
+      ("version", @moongate.json_str("0.4.0")),
       ("schema", @moongate.json_int(1)),
     ]),
   )

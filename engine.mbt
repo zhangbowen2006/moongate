@@ -33,6 +33,7 @@ struct PendingApproval {
   rule : String
   expires : Int64
   sensitive : Bool
+  revealed : Int32
 }
 
 ///|
@@ -64,6 +65,9 @@ pub struct Session {
   mut approval_requests : Int32
   mut forwarded : Int32
   mut tainted_values : Int32
+  mut total_calls : Int32
+  mut arg_bytes : Int64
+  mut reveal_count : Int32
 }
 
 ///|
@@ -85,6 +89,9 @@ pub fn new_session(id : String, policy : Policy) -> Session {
     approval_requests: 0,
     forwarded: 0,
     tainted_values: 0,
+    total_calls: 0,
+    arg_bytes: 0,
+    reveal_count: 0,
   }
 }
 
@@ -246,6 +253,29 @@ fn decide(
       ttl_ms: 0,
     }
   }
+  let arg_size = @utf8.encode(json_canonical(args)).length().to_int64()
+  if policy.budget.max_calls > 0 &&
+    session.total_calls >= policy.budget.max_calls {
+    return {
+      decision: "deny",
+      rule: "budget-calls",
+      reason: "session call budget exhausted (\{policy.budget.max_calls})",
+      hits: [],
+      ttl_ms: 0,
+    }
+  }
+  if policy.budget.max_arg_bytes > 0 &&
+    session.arg_bytes + arg_size > policy.budget.max_arg_bytes.to_int64() {
+    return {
+      decision: "deny",
+      rule: "budget-bytes",
+      reason: "argument budget exhausted (\{session.arg_bytes}/\{policy.budget.max_arg_bytes} bytes)",
+      hits: [],
+      ttl_ms: 0,
+    }
+  }
+  session.total_calls += 1
+  session.arg_bytes += arg_size
   let hits = if is_egress(policy, tool) {
     find_taint(session.taint, collect_strings(args), policy.min_secret_len)
   } else {
@@ -571,6 +601,28 @@ fn handle_tool_call(
       Some(rule) => {
         reveal_rule = rule.id
         revealed = fingerprints.length()
+        if session.policy.budget.max_reveals > 0 &&
+          session.reveal_count + revealed > session.policy.budget.max_reveals {
+          let verdict : Verdict = {
+            decision: "deny",
+            rule: "budget-reveals",
+            reason: "reveal budget exhausted (\{session.policy.budget.max_reveals})",
+            hits: placeholders_evidence(session, fingerprints),
+            ttl_ms: 0,
+          }
+          actions.push(
+            decision_ledger(
+              session, now, tool, call, verdict, digest, args, "client", 0, "",
+            ),
+          )
+          session.denied += 1
+          actions.push(
+            action_client(
+              json_render(deny_response(msg, verdict, call, tool, digest)),
+            ),
+          )
+          return actions
+        }
         let values = vault_values(session)
         let params = map_json_strings(
           match msg.params {
@@ -599,6 +651,7 @@ fn handle_tool_call(
         tool,
         sensitive: is_sensitive(session.policy, tool, args),
       })
+      session.reveal_count += revealed
       actions.push(action_upstream(forward_line))
     }
     "approval" => {
@@ -614,6 +667,7 @@ fn handle_tool_call(
         rule: verdict.rule,
         expires,
         sensitive: is_sensitive(session.policy, tool, args),
+        revealed,
       })
       actions.push(
         json_obj([
@@ -1020,6 +1074,37 @@ pub fn resolve_approval(
     return actions
   }
   if approved {
+    if session.policy.budget.max_reveals > 0 &&
+      session.reveal_count + pending.revealed >
+      session.policy.budget.max_reveals {
+      session.denied += 1
+      let response = error_response(
+        pending.id,
+        -32001,
+        "MoonGate: reveal budget exhausted",
+        Some(
+          json_obj([
+            (
+              "moongate",
+              json_obj([
+                ("decision", json_str("budget-reveals")),
+                ("call", json_str(pending.call)),
+              ]),
+            ),
+          ]),
+        ),
+      )
+      actions.push(action_client(json_render(response)))
+      actions.push(
+        ledger_event(session, now, "approval", [
+          ("call", json_str(pending.call)),
+          ("tool", json_str(pending.tool)),
+          ("decision", json_str("budget-denied")),
+        ]),
+      )
+      return actions
+    }
+    session.reveal_count += pending.revealed
     session.allowed += 1
     session.forwarded += 1
     session.inflight.set(pending.key, {
@@ -1092,6 +1177,9 @@ pub fn close_session(session : Session, now : Int64) -> Json {
     ("approval_requests", json_int(session.approval_requests)),
     ("forwarded", json_int(session.forwarded)),
     ("tainted_values", json_int(session.tainted_values)),
+    ("total_calls", json_int(session.total_calls)),
+    ("arg_bytes", json_i64(session.arg_bytes)),
+    ("reveal_count", json_int(session.reveal_count)),
   ])
 }
 

@@ -31,6 +31,7 @@
 | `sensitive` | 数组 | `[]` | 声明哪些工具结果需要打血缘标记 |
 | `egress` | 对象 | 无 | `{ "tools": [...], "on_taint": "deny" \| "approval" }` |
 | `rate` | 对象 | `{window_ms: 60000, max_calls: 60}` | 每条会话独立计数 |
+| `budget` | 对象 | 全部为 0（不限制） | 整场会话的累计配额：调用数、参数字节、密钥替换次数 |
 | `approval_ttl_ms` | 整数 | 45000 | 审批请求的默认有效期 |
 | `min_secret_len` | 整数 | 12 | 血缘提取的最小值长度 |
 | `mask_secrets` | 布尔 | true | 把敏感结果中的值替换为 `«mg:<指纹>»`，明文只留在网关内存 |
@@ -81,13 +82,15 @@
 ### 求值顺序
 
 ```
+0. 替身检查      参数含 «mg:…» 时必须有 reveal 规则，否则 secret-reveal 拒绝
 1. 频率检查      超出 rate 直接 deny，规则 "rate-limit"
-2. 血缘检查      外发工具的参数含敏感值时，按 egress.on_taint 判定，规则 "egress-taint"
-3. 规则列表      第一条命中的规则生效
-4. 默认判定      default_decision
+2. 配额检查      调用数 / 参数字节超限直接 deny（budget-calls / budget-bytes）
+3. 血缘检查      外发工具的参数含敏感值时，按 egress.on_taint 判定，规则 "egress-taint"
+4. 规则列表      第一条命中的规则生效
+5. 默认判定      default_decision
 ```
 
-血缘排在第 2 位，是因为它表达的是“这个值不能出去”，比“这个工具通常允许”更强；把血缘放在规则之后，一条宽泛的 allow 就能绕过它。
+替身检查排在最前，是因为未授权的占位符一旦放行就会原样到达上游；频率与配额排在血缘之前，是因为它们最便宜且能保护上游。血缘排在规则之前，是因为它表达的是“这个值不能出去”，比“这个工具通常允许”更强；放在规则之后，一条宽泛的 allow 就能绕过它。
 
 规则按顺序匹配而不是“最具体优先”，是为了让策略可读、可预测。代价是顺序写错会遮蔽后面的规则，`moongate check` 会对同工具模式的无条件规则给出遮蔽警告：
 
@@ -96,6 +99,17 @@ node bin/moongate.mjs check --policy examples/policy.workspace.json
 ```
 
 建议的顺序：**窄范围 deny（逃逸、危险参数）→ 常规 allow → 需要审批的动作 → 兜底 deny**。
+
+## 会话配额
+
+```jsonc
+{ "budget": { "max_calls": 80, "max_arg_bytes": 262144, "max_reveals": 5 } }
+```
+
+- `max_calls`：整场会话允许的 `tools/call` 次数；`0` 表示不限制。
+- `max_arg_bytes`：累计参数 UTF-8 字节数；`0` 表示不限制。
+- `max_reveals`：密钥被换回真值的次数；`0` 表示不限制。审批批准时还会再检查一次，避免多个待批请求合计超限。
+- 配额与 `rate` 独立：`rate` 管窗口内频率，`budget` 管整场总量。两者都不通过时分别返回 `rate-limit` / `budget-*`。
 
 ## 密钥替身
 

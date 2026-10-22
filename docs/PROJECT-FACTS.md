@@ -7,7 +7,7 @@
 | 部分 | 行数 | 说明 |
 | --- | --- | --- |
 | MoonBit 引擎 | 约 3000 | `protocol.mbt` `policy.mbt` `lineage.mbt` `paths.mbt` `engine.mbt` `report.mbt` `sha256.mbt` `json_util.mbt` `glob.mbt` |
-| MoonBit 测试 | 约 970 | 35 个用例 |
+| MoonBit 测试 | 约 1020 | 38 个用例 |
 | Node 宿主 | 约 760 | `src/` + `bin/`，含审批台页面 |
 | 演示与测试 | 约 1010 | `demo/` + `test/` |
 
@@ -23,6 +23,7 @@
 - 密钥替身：结果脱敏为占位符、按 `reveal` 规则替换、未授权目的地拒绝
 - Mooncakes 库：`zhangbowen2006/moongate@0.3.0`
 - 一次性审批：参数摘要、TTL、消费后失效
+- 会话配额：调用数、参数字节、密钥替换次数
 - 哈希链账本、离线校验、HTML 报告
 - 服务端内嵌 guard：同一份策略的第二个执行点，绕过网关仍生效
 - CLI：`run` / `check` / `verify` / `report` / `version`
@@ -31,7 +32,7 @@
 
 ```sh
 moon check --deny-warn
-moon test --deny-warn              # 35 passed
+moon test --deny-warn              # 38 passed
 node scripts/build.mjs
 node --test test/*.test.mjs        # 9 passed
 node demo/run.mjs                  # 10 个场景，含替身与绕过网关
@@ -48,7 +49,7 @@ node bin/moongate.mjs report --ledger runs/demo.jsonl
 
 - 现有方案是单个代理进程；代理被绕过即失效。
 - MoonGate 把同一份 MoonBit 策略编译进服务端，工具函数执行前再判一次；演示里直连服务端仍被拒绝。
-- 判定核心一套代码，网关与 guard 共用；MoonBit 可编译到 JS/Wasm，不绑定解释器运行时。
+- 判定核心一套代码，网关与 guard 共用；硬判定一致性由穷举测试覆盖；MoonBit 可编译到 JS/Wasm，不绑定解释器运行时。
 - 密钥替身发生在 MCP 工具调用边界，占位符可跨调用流转，替换目标逐条授权；凭据代理通常只在 HTTP 出口替换 header。
 
 ## 与上一版的差异

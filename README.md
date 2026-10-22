@@ -7,7 +7,7 @@
 
 **密钥替身。** 敏感值在进入模型上下文之前被替换成 `«mg:…»` 占位符；只有策略显式允许的目的地，网关才会在转发前换回真值。模型可以“使用”密钥，但从未看见它。
 
-- 策略、值级血缘、一次性审批、哈希链账本，判定全部发生在执行之前
+- 策略、值级血缘、会话配额、一次性审批、哈希链账本，判定全部发生在执行之前
 - 第二执行点是一个几十行的嵌入调用，不需要改协议、不需要模型配合
 - 核心用 MoonBit 写，已发布到 [Mooncakes](https://mooncakes.io/docs/zhangbowen2006/moongate)；可编译到 JavaScript / Wasm
 
@@ -103,7 +103,7 @@ node bin/moongate.mjs report --ledger runs/demo.jsonl
 
 ```sh
 moon check --deny-warn
-moon test --deny-warn       # 35 个单元测试
+moon test --deny-warn       # 38 个单元测试
 node scripts/build.mjs
 node --test test/*.test.mjs # 9 个进程级测试
 ```
@@ -194,7 +194,13 @@ if (verdict.decision === 'deny') {
 }
 ```
 
-审批与 `(工具名, 参数)` 的规范化 SHA-256 绑定，换参数、重放、超时都会失效。
+会话配额独立于频率限制，按整场会话累计：
+
+```jsonc
+{ "budget": { "max_calls": 80, "max_arg_bytes": 262144, "max_reveals": 5 } }
+```
+
+`max_reveals` 限制密钥被换回真值的次数——即使目的地都合法，也不允许无限取用。审批与 `(工具名, 参数)` 的规范化 SHA-256 绑定，换参数、重放、超时都会失效。
 
 ## 账本
 
@@ -208,7 +214,7 @@ hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 
 ## 工程证据
 
-- `moon test --deny-warn`：35 个单元测试（策略顺序、血缘误报、路径规范化、guard、替身替换、审批一次性、账本篡改）
+- `moon test --deny-warn`：38 个单元测试（策略顺序、血缘误报、路径规范化、guard、替身替换、审批一次性、账本篡改）
 - `node --test`：9 个真实进程测试（脱敏、按目的地替换、路径穿越、绕过网关、失败关闭、篡改、报告）
 - `interop/`：官方 SDK 客户端 + 官方 filesystem 服务端，4/4 通过
 - Mooncakes：`moon add zhangbowen2006/moongate@0.3.0`，已在空工程中安装并调用 `guard_decision` 验证

@@ -146,5 +146,10 @@
       ],
       "reason": "the internal collector is allowed to receive the value"
     }
-  ]
+  ],
+  "budget": {
+    "max_calls": 80,
+    "max_arg_bytes": 262144,
+    "max_reveals": 5
+  }
 }

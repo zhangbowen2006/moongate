@@ -49,7 +49,7 @@ Build from source (MoonBit 0.10.16+):
 
 ```sh
 moon check --deny-warn
-moon test --deny-warn        # 35 unit tests
+moon test --deny-warn        # 38 unit tests
 node scripts/build.mjs
 node --test test/*.test.mjs  # 9 process-level tests
 ```
@@ -89,7 +89,9 @@ The guard enforces hard denials only. `approval` is returned as `allow`, because
 - Sensitive results are masked to `«mg:<fingerprint>»`; the plaintext stays in an in-memory session vault.
 - Arguments carrying a placeholder are refused (`secret-reveal`) unless a `reveal` rule matches the destination; then the gateway substitutes the real value before forwarding.
 - Fingerprints of those values are also kept for egress matching, with the source call as evidence.
+- Session budgets cap total calls, argument bytes and secret reveals; zero disables a quota.
 - Approvals are bound to a canonical digest of `(tool, arguments)`, expire, and are consumed once.
+- A cross-product test asserts the gateway and the guard agree on every hard decision.
 - Denied tools are removed from `tools/list`.
 - Every decision is one hash-chained ledger entry; `verify` recomputes the chain.
 
