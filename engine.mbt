@@ -80,6 +80,7 @@ pub fn new_session(id : String, policy : Policy) -> Session {
 /// content hash, so a report can be tied to an exact policy revision.
 pub fn open_session(session : Session, now : Int64) -> Json {
   ledger_event(session, now, "session_open", [
+    ("engine", json_str("0.2.0")),
     ("policy", json_str(session.policy.name)),
     ("policy_digest", json_str(session.policy.digest)),
     ("rules", json_int(session.policy.rules.length())),

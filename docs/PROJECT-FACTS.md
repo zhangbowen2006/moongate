@@ -31,7 +31,7 @@
 moon check --deny-warn
 moon test --deny-warn              # 29 passed
 node scripts/build.mjs
-node --test test/*.test.mjs        # 8 passed
+node --test test/*.test.mjs        # 9 passed
 node demo/run.mjs                  # 9 个场景，含绕过网关
 cd interop && npm install && node client.mjs   # 4/4
 node bin/moongate.mjs verify --ledger runs/demo.jsonl

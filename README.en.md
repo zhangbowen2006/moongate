@@ -46,7 +46,7 @@ Build from source (MoonBit 0.10.16+):
 moon check --deny-warn
 moon test --deny-warn        # 29 unit tests
 node scripts/build.mjs
-node --test test/*.test.mjs  # 8 process-level tests
+node --test test/*.test.mjs  # 9 process-level tests
 ```
 
 ## Use it

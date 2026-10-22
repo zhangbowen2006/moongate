@@ -173,6 +173,24 @@ test('the server still denies when the gateway is bypassed', async () => {
   }
 });
 
+test('the guard fails closed when its policy cannot load', async () => {
+  const workspace = prepareWorkspace('guardfail');
+  const broken = join(ROOT, 'runs', 'broken-policy.json');
+  writeFileSync(broken, '{"version":1,"default_decision":"maybe"}');
+  const direct = new McpPipe(process.execPath, [SERVER], {
+    cwd: ROOT,
+    env: { MOONGATE_WORKSPACE: workspace, MOONGATE_SINK: SINK, MOONGATE_POLICY: broken },
+  });
+  try {
+    await direct.initialize();
+    const result = await direct.callTool('fs.read', { path: 'notes/todo.md' });
+    assert.equal(result.isError, true);
+    assert.match(result.content[0].text, /guard unavailable/);
+  } finally {
+    await direct.close();
+  }
+});
+
 test('policy check reports the effective rules', async () => {
   const result = spawnSyncNode([BIN, 'check', '--policy', POLICY]);
   assert.equal(result.status, 0);

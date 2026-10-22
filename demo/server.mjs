@@ -18,6 +18,7 @@ const SINK = process.env.MOONGATE_SINK || 'http://127.0.0.1:8787';
 // the gateway. It enforces hard denials only; approvals and value lineage need
 // session state and stay in the gateway.
 let guard = null;
+let guardError = null;
 const policyPath = process.env.MOONGATE_POLICY;
 if (policyPath) {
   try {
@@ -28,10 +29,12 @@ if (policyPath) {
         `[demo-server] guard active: ${created.rules} rules, policy ${created.digest.slice(0, 12)}\n`,
       );
     } else {
-      process.stderr.write(`[demo-server] guard disabled: ${created.error}\n`);
+      guardError = created.error;
+      process.stderr.write(`[demo-server] guard failed to load: ${guardError}\n`);
     }
   } catch (error) {
-    process.stderr.write(`[demo-server] guard unavailable: ${error.message}\n`);
+    guardError = error.message;
+    process.stderr.write(`[demo-server] guard unavailable: ${guardError}\n`);
   }
 }
 
@@ -168,6 +171,19 @@ async function handle(message) {
   if (method === 'tools/call') {
     try {
       const args = params?.arguments ?? {};
+      if (guardError !== null) {
+        // Fail closed: a server that was told to enforce a policy but could not
+        // load it must not fall back to running tools unchecked.
+        send({
+          jsonrpc: '2.0',
+          id,
+          result: {
+            content: [{ type: 'text', text: `Blocked: guard unavailable (${guardError})` }],
+            isError: true,
+          },
+        });
+        return;
+      }
       if (guard !== null) {
         const gate = JSON.parse(engine.guard_check(guard, params?.name ?? '', JSON.stringify(args)));
         if (gate.decision === 'deny') {

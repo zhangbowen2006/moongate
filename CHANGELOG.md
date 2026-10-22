@@ -9,7 +9,7 @@
 - 服务端内嵌 guard：`guard_create` / `guard_check`，与网关共用同一份 MoonBit 策略；只执行硬拒绝，`approval` 交给网关
 - 演示第 9 步：绕过网关直连服务端，`fs.delete` 与路径穿越仍被拒绝
 - 路径词法规范化：`normalize: "path"`，关闭 `reports/../../etc/passwd` 这类前缀绕过
-- 29 个单元测试、8 个进程级测试（新增路径穿越、绕过网关）
+- 29 个单元测试、9 个进程级测试（新增路径穿越、绕过网关）
 
 ### 变更
 

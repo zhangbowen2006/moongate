@@ -78,7 +78,7 @@ node bin/moongate.mjs report --ledger runs/demo.jsonl
 moon check --deny-warn
 moon test --deny-warn       # 29 个单元测试
 node scripts/build.mjs
-node --test test/*.test.mjs # 8 个进程级测试
+node --test test/*.test.mjs # 9 个进程级测试
 ```
 
 ## 两种接入方式
@@ -166,7 +166,7 @@ hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 ## 工程证据
 
 - `moon test --deny-warn`：29 个单元测试（策略顺序、血缘误报、路径规范化、guard、审批一次性、账本篡改）
-- `node --test`：8 个真实进程测试（副作用、路径穿越、绕过网关、篡改、报告）
+- `node --test`：9 个真实进程测试（副作用、路径穿越、绕过网关、篡改、报告）
 - `interop/`：官方 SDK 客户端 + 官方 filesystem 服务端，4/4 通过
 - CI：Linux / macOS / Windows 三平台，含演示与互操作
 
