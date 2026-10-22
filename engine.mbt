@@ -277,7 +277,7 @@ fn denial_message(verdict : Verdict) -> String {
   } else {
     verdict.reason
   }
-  "Blocked by Airlock policy (\{verdict.rule}): \{detail}"
+  "Blocked by MoonGate policy (\{verdict.rule}): \{detail}"
 }
 
 ///|
@@ -310,7 +310,7 @@ fn deny_response(
     msg.id,
     -32001,
     denial_message(verdict),
-    Some(json_obj([("airlock", denial_payload(verdict, call, tool, digest))])),
+    Some(json_obj([("moongate", denial_payload(verdict, call, tool, digest))])),
   )
 }
 
@@ -410,7 +410,7 @@ fn protocol_error(
   actions.push(
     action_client(
       json_render(
-        error_response(None, -32700, "Airlock: invalid JSON-RPC message", None),
+        error_response(None, -32700, "MoonGate: invalid JSON-RPC message", None),
       ),
     ),
   )
@@ -436,7 +436,7 @@ fn handle_tool_call(
                 error_response(
                   msg.id,
                   -32602,
-                  "Airlock: tools/call requires a nonempty params.name",
+                  "MoonGate: tools/call requires a nonempty params.name",
                   None,
                 ),
               ),
@@ -452,7 +452,7 @@ fn handle_tool_call(
               error_response(
                 msg.id,
                 -32602,
-                "Airlock: tools/call requires params.name",
+                "MoonGate: tools/call requires params.name",
                 None,
               ),
             ),
@@ -564,7 +564,7 @@ fn handle_client_message(
         let response = error_response(
           msg.id,
           -32601,
-          "Airlock: method \{verb} is not allowed by policy",
+          "MoonGate: method \{verb} is not allowed by policy",
           None,
         )
         [
@@ -747,7 +747,7 @@ fn handle_server_request(
     let response = error_response(
       msg.id,
       -32001,
-      "Airlock: server-initiated \{verb} is not permitted",
+      "MoonGate: server-initiated \{verb} is not permitted",
       None,
     )
     [
@@ -780,7 +780,7 @@ pub fn server_line(
       )
       actions.push(
         action_notice(
-          "warn", "Airlock dropped a malformed line from the upstream server",
+          "warn", "MoonGate dropped a malformed line from the upstream server",
         ),
       )
       return actions
@@ -790,7 +790,7 @@ pub fn server_line(
     None =>
       [
         action_notice(
-          "warn", "Airlock dropped a non JSON-RPC line from upstream",
+          "warn", "MoonGate dropped a non JSON-RPC line from upstream",
         ),
       ]
     Some(msg) =>
@@ -812,6 +812,32 @@ pub fn server_line(
 }
 
 ///|
+/// Stateless policy check for the in-process guard.
+///
+/// The guard runs inside the MCP server, where there is no session, no
+/// lineage table and no approval queue. It therefore enforces only hard
+/// denials: `approval` is reported as `allow` because the gateway decides
+/// whether a human approved the call. This is the second enforcement point —
+/// if the gateway is bypassed, forbidden tools still do not run.
+pub fn guard_decision(policy : Policy, tool : String, args : Json) -> Json {
+  match match_rule(policy, tool, args) {
+    Some(hit) => guard_payload(hit.decision, hit.id, hit.reason)
+    None => guard_payload(policy.default_decision, "default", "no rule matched")
+  }
+}
+
+///|
+fn guard_payload(decision : String, rule : String, reason : String) -> Json {
+  let effective = if decision == "deny" { "deny" } else { "allow" }
+  json_obj([
+    ("decision", json_str(effective)),
+    ("policy_decision", json_str(decision)),
+    ("rule", json_str(rule)),
+    ("reason", json_str(reason)),
+  ])
+}
+
+///|
 /// Resolve a pending approval. Approving forwards the original request, so the
 /// upstream server sees exactly one call; denying answers the client with a
 /// policy error. Either way the pending entry is removed, which is what makes
@@ -824,7 +850,7 @@ pub fn resolve_approval(
 ) -> Array[Json] {
   let pending = match session.pending.get(call) {
     Some(pending) => pending
-    None => return [action_notice("warn", "Airlock: unknown approval \{call}")]
+    None => return [action_notice("warn", "MoonGate: unknown approval \{call}")]
   }
   let _ = session.pending.remove(call)
   let actions : Array[Json] = []
@@ -833,11 +859,11 @@ pub fn resolve_approval(
     let response = error_response(
       pending.id,
       -32002,
-      "Airlock: approval for \{pending.tool} expired",
+      "MoonGate: approval for \{pending.tool} expired",
       Some(
         json_obj([
           (
-            "airlock",
+            "moongate",
             json_obj([
               ("decision", json_str("approval_timeout")),
               ("call", json_str(pending.call)),
@@ -886,11 +912,11 @@ pub fn resolve_approval(
     let response = error_response(
       pending.id,
       -32001,
-      "Airlock: operator denied \{pending.tool}",
+      "MoonGate: operator denied \{pending.tool}",
       Some(
         json_obj([
           (
-            "airlock",
+            "moongate",
             json_obj([
               ("decision", json_str("approval_denied")),
               ("call", json_str(pending.call)),

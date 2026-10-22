@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "zhangbowen2006/airlock"
+package "zhangbowen2006/moongate"
 
 // Values
 pub fn advertise_tool(Policy, String) -> Bool
@@ -33,6 +33,8 @@ pub fn find_taint(Map[String, TaintSource], Array[String], Int32) -> Array[Taint
 pub fn fingerprint_of(String) -> String
 
 pub fn glob_match(String, String) -> Bool
+
+pub fn guard_decision(Policy, String, Json) -> Json
 
 pub fn hex_uint(UInt32, width? : Int32) -> String
 
@@ -86,6 +88,8 @@ pub fn match_rule(Policy, String, Json) -> RuleHit?
 
 pub fn new_session(String, Policy) -> Session
 
+pub fn normalize_path(String) -> String
+
 pub fn open_session(Session, Int64) -> Json
 
 pub fn parse_policy(String) -> Policy raise PolicyError
@@ -127,6 +131,7 @@ pub struct ArgCheck {
   globs : Array[String]
   prefixes : Array[String]
   negate : Bool
+  normalize_path : Bool
 }
 
 type Inflight

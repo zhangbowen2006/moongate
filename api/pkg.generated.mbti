@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "zhangbowen2006/airlock/api"
+package "zhangbowen2006/moongate/api"
 
 // Values
 pub fn client_line(Int32, String, Int64) -> String
@@ -7,6 +7,10 @@ pub fn client_line(Int32, String, Int64) -> String
 pub fn close(Int32, Int64) -> String
 
 pub fn create(String, String, Int64) -> String
+
+pub fn guard_check(Int32, String, String) -> String
+
+pub fn guard_create(String) -> String
 
 pub fn inspect(String) -> String
 

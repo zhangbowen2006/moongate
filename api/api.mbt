@@ -7,10 +7,10 @@
 /// decision the engine did not make.
 
 ///|
-let sessions : Array[@airlock.Session?] = []
+let sessions : Array[@moongate.Session?] = []
 
 ///|
-fn store_session(session : @airlock.Session) -> Int32 {
+fn store_session(session : @moongate.Session) -> Int32 {
   let mut index = 0
   let mut slot = -1
   for entry in sessions {
@@ -30,7 +30,7 @@ fn store_session(session : @airlock.Session) -> Int32 {
 }
 
 ///|
-fn session_at(handle : Int32) -> @airlock.Session? {
+fn session_at(handle : Int32) -> @moongate.Session? {
   if handle < 0 || handle >= sessions.length() {
     None
   } else {
@@ -40,15 +40,15 @@ fn session_at(handle : Int32) -> @airlock.Session? {
 
 ///|
 fn render_actions(actions : Array[Json]) -> String {
-  @airlock.json_render(@airlock.json_arr(actions))
+  @moongate.json_render(@moongate.json_arr(actions))
 }
 
 ///|
 fn failure(message : String) -> String {
-  @airlock.json_render(
-    @airlock.json_obj([
-      ("ok", @airlock.json_bool(false)),
-      ("error", @airlock.json_str(message)),
+  @moongate.json_render(
+    @moongate.json_obj([
+      ("ok", @moongate.json_bool(false)),
+      ("error", @moongate.json_str(message)),
     ]),
   )
 }
@@ -61,63 +61,64 @@ pub fn create(
   session_id : String,
   now_ms : Int64,
 ) -> String {
-  let policy = @airlock.parse_policy(policy_json) catch {
-    @airlock.PolicyError(message) => return failure(message)
+  let policy = @moongate.parse_policy(policy_json) catch {
+    @moongate.PolicyError(message) => return failure(message)
   }
-  let session = @airlock.new_session(session_id, policy)
+  let session = @moongate.new_session(session_id, policy)
   let handle = store_session(session)
-  let open = @airlock.open_session(session, now_ms)
-  @airlock.json_render(
-    @airlock.json_obj([
-      ("ok", @airlock.json_bool(true)),
-      ("handle", @airlock.json_int(handle)),
+  let open = @moongate.open_session(session, now_ms)
+  @moongate.json_render(
+    @moongate.json_obj([
+      ("ok", @moongate.json_bool(true)),
+      ("handle", @moongate.json_int(handle)),
       ("policy", policy_summary(session)),
-      ("ledger", @airlock.json_arr([open])),
+      ("ledger", @moongate.json_arr([open])),
     ]),
   )
 }
 
 ///|
-fn policy_summary(session : @airlock.Session) -> Json {
+fn policy_summary(session : @moongate.Session) -> Json {
   session_policy_summary(session)
 }
 
 ///|
-fn session_policy_summary(session : @airlock.Session) -> Json {
+fn session_policy_summary(session : @moongate.Session) -> Json {
   let policy = session.policy
   let rules : Array[Json] = []
   for rule in policy.rules {
     rules.push(
-      @airlock.json_obj([
-        ("id", @airlock.json_str(rule.id)),
-        ("tool", @airlock.json_str(rule.tool)),
-        ("decision", @airlock.json_str(rule.decision)),
-        ("conditional", @airlock.json_bool(!rule.checks.is_empty())),
-        ("reason", @airlock.json_str(rule.reason)),
+      @moongate.json_obj([
+        ("id", @moongate.json_str(rule.id)),
+        ("tool", @moongate.json_str(rule.tool)),
+        ("decision", @moongate.json_str(rule.decision)),
+        ("conditional", @moongate.json_bool(!rule.checks.is_empty())),
+        ("reason", @moongate.json_str(rule.reason)),
       ]),
     )
   }
-  @airlock.json_obj([
-    ("name", @airlock.json_str(policy.name)),
-    ("digest", @airlock.json_str(policy.digest)),
-    ("default", @airlock.json_str(policy.default_decision)),
-    ("rules", @airlock.json_arr(rules)),
-    ("egress_tools", @airlock.json_strings(policy.egress_tools)),
-    ("on_taint", @airlock.json_str(policy.on_taint)),
-    ("rule_count", @airlock.json_int(policy.rules.length())),
-    ("sensitive_count", @airlock.json_int(policy.sensitive.length())),
-    ("rate_window_ms", @airlock.json_int(policy.rate.window_ms)),
-    ("rate_max_calls", @airlock.json_int(policy.rate.max_calls)),
-    ("approval_ttl_ms", @airlock.json_int(policy.approval_ttl_ms)),
-    ("min_secret_len", @airlock.json_int(policy.min_secret_len)),
-    ("hide_denied", @airlock.json_bool(policy.hide_denied)),
+  @moongate.json_obj([
+    ("name", @moongate.json_str(policy.name)),
+    ("digest", @moongate.json_str(policy.digest)),
+    ("default", @moongate.json_str(policy.default_decision)),
+    ("rules", @moongate.json_arr(rules)),
+    ("egress_tools", @moongate.json_strings(policy.egress_tools)),
+    ("on_taint", @moongate.json_str(policy.on_taint)),
+    ("rule_count", @moongate.json_int(policy.rules.length())),
+    ("sensitive_count", @moongate.json_int(policy.sensitive.length())),
+    ("rate_window_ms", @moongate.json_int(policy.rate.window_ms)),
+    ("rate_max_calls", @moongate.json_int(policy.rate.max_calls)),
+    ("approval_ttl_ms", @moongate.json_int(policy.approval_ttl_ms)),
+    ("min_secret_len", @moongate.json_int(policy.min_secret_len)),
+    ("hide_denied", @moongate.json_bool(policy.hide_denied)),
   ])
 }
 
 ///|
 pub fn client_line(handle : Int32, line : String, now_ms : Int64) -> String {
   match session_at(handle) {
-    Some(session) => render_actions(@airlock.client_line(session, line, now_ms))
+    Some(session) =>
+      render_actions(@moongate.client_line(session, line, now_ms))
     None => failure("unknown session handle")
   }
 }
@@ -125,7 +126,8 @@ pub fn client_line(handle : Int32, line : String, now_ms : Int64) -> String {
 ///|
 pub fn server_line(handle : Int32, line : String, now_ms : Int64) -> String {
   match session_at(handle) {
-    Some(session) => render_actions(@airlock.server_line(session, line, now_ms))
+    Some(session) =>
+      render_actions(@moongate.server_line(session, line, now_ms))
     None => failure("unknown session handle")
   }
 }
@@ -139,7 +141,9 @@ pub fn resolve_approval(
 ) -> String {
   match session_at(handle) {
     Some(session) =>
-      render_actions(@airlock.resolve_approval(session, call, approved, now_ms))
+      render_actions(
+        @moongate.resolve_approval(session, call, approved, now_ms),
+      )
     None => failure("unknown session handle")
   }
 }
@@ -147,8 +151,46 @@ pub fn resolve_approval(
 ///|
 pub fn tick(handle : Int32, now_ms : Int64) -> String {
   match session_at(handle) {
-    Some(session) => render_actions(@airlock.expire_approvals(session, now_ms))
+    Some(session) => render_actions(@moongate.expire_approvals(session, now_ms))
     None => failure("unknown session handle")
+  }
+}
+
+///|
+let guards : Array[@moongate.Policy?] = []
+
+///|
+pub fn guard_create(policy_json : String) -> String {
+  let policy = @moongate.parse_policy(policy_json) catch {
+    @moongate.PolicyError(message) => return failure(message)
+  }
+  guards.push(Some(policy))
+  @moongate.json_render(
+    @moongate.json_obj([
+      ("ok", @moongate.json_bool(true)),
+      ("handle", @moongate.json_int(guards.length() - 1)),
+      ("digest", @moongate.json_str(policy.digest)),
+      ("rules", @moongate.json_int(policy.rules.length())),
+    ]),
+  )
+}
+
+///|
+pub fn guard_check(handle : Int32, tool : String, args_json : String) -> String {
+  let policy = if handle >= 0 && handle < guards.length() {
+    guards[handle]
+  } else {
+    None
+  }
+  match policy {
+    Some(policy) => {
+      let args = match @moongate.json_parse_opt(args_json) {
+        Some(value) => value
+        None => return failure("arguments must be JSON")
+      }
+      @moongate.json_render(@moongate.guard_decision(policy, tool, args))
+    }
+    None => failure("unknown guard handle")
   }
 }
 
@@ -156,9 +198,9 @@ pub fn tick(handle : Int32, now_ms : Int64) -> String {
 pub fn close(handle : Int32, now_ms : Int64) -> String {
   match session_at(handle) {
     Some(session) => {
-      let action = @airlock.close_session(session, now_ms)
+      let action = @moongate.close_session(session, now_ms)
       sessions[handle] = None
-      @airlock.json_render(@airlock.json_arr([action]))
+      @moongate.json_render(@moongate.json_arr([action]))
     }
     None => failure("unknown session handle")
   }
@@ -166,7 +208,7 @@ pub fn close(handle : Int32, now_ms : Int64) -> String {
 
 ///|
 fn parse_lines(source : String) -> Array[String]? {
-  match @airlock.json_parse_opt(source) {
+  match @moongate.json_parse_opt(source) {
     Some(Array(items)) => {
       let lines : Array[String] = []
       for item in items {
@@ -184,7 +226,7 @@ fn parse_lines(source : String) -> Array[String]? {
 ///|
 pub fn verify(lines_json : String) -> String {
   match parse_lines(lines_json) {
-    Some(lines) => @airlock.json_render(@airlock.verify_ledger(lines))
+    Some(lines) => @moongate.json_render(@moongate.verify_ledger(lines))
     None => failure("expected a JSON array of ledger lines")
   }
 }
@@ -192,21 +234,21 @@ pub fn verify(lines_json : String) -> String {
 ///|
 pub fn report(lines_json : String) -> String {
   match parse_lines(lines_json) {
-    Some(lines) => @airlock.json_render(@airlock.report_ledger(lines))
+    Some(lines) => @moongate.json_render(@moongate.report_ledger(lines))
     None => failure("expected a JSON array of ledger lines")
   }
 }
 
 ///|
-/// Validate a policy without creating a session; used by `airlock check`.
+/// Validate a policy without creating a session; used by `moongate check`.
 pub fn inspect(policy_json : String) -> String {
-  let policy = @airlock.parse_policy(policy_json) catch {
-    @airlock.PolicyError(message) => return failure(message)
+  let policy = @moongate.parse_policy(policy_json) catch {
+    @moongate.PolicyError(message) => return failure(message)
   }
-  let session = @airlock.new_session("inspect", policy)
-  @airlock.json_render(
-    @airlock.json_obj([
-      ("ok", @airlock.json_bool(true)),
+  let session = @moongate.new_session("inspect", policy)
+  @moongate.json_render(
+    @moongate.json_obj([
+      ("ok", @moongate.json_bool(true)),
       ("policy", session_policy_summary(session)),
     ]),
   )
@@ -214,11 +256,11 @@ pub fn inspect(policy_json : String) -> String {
 
 ///|
 pub fn version() -> String {
-  @airlock.json_render(
-    @airlock.json_obj([
-      ("name", @airlock.json_str("airlock")),
-      ("version", @airlock.json_str("0.1.0")),
-      ("schema", @airlock.json_int(1)),
+  @moongate.json_render(
+    @moongate.json_obj([
+      ("name", @moongate.json_str("moongate")),
+      ("version", @moongate.json_str("0.2.0")),
+      ("schema", @moongate.json_int(1)),
     ]),
   )
 }

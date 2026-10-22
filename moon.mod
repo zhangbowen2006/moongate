@@ -1,10 +1,10 @@
-name = "zhangbowen2006/airlock"
+name = "zhangbowen2006/moongate"
 
-version = "0.1.0"
+version = "0.2.0"
 
 readme = "README.md"
 
-repository = "https://github.com/zhangbowen2006/airlock"
+repository = "https://github.com/zhangbowen2006/moongate"
 
 license = "MIT"
 
@@ -12,4 +12,4 @@ keywords = [ "mcp", "agent", "security", "gateway", "policy" ]
 
 preferred_target = "wasm-gc"
 
-description = "In-path policy enforcement and data-provenance gateway for MCP agents."
+description = "Dual-point policy enforcement for MCP tools: one MoonBit core in the gateway and inside the server."

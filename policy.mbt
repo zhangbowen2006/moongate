@@ -20,6 +20,7 @@ pub struct ArgCheck {
   globs : Array[String]
   prefixes : Array[String]
   negate : Bool
+  normalize_path : Bool
 }
 
 ///|
@@ -193,6 +194,8 @@ fn parse_checks(
           globs,
           prefixes,
           negate: policy_bool(fields, "negate", false),
+          normalize_path: policy_optional_text(fields, "normalize", "") ==
+          "path",
         })
       }
       _ => policy_fail("\{path}: expected object")
@@ -403,6 +406,7 @@ fn check_matches(check : ArgCheck, args : Json) -> Bool {
     Some(other) => json_render(other)
     None => ""
   }
+  let value = if check.normalize_path { normalize_path(value) } else { value }
   let mut hit = false
   for glob in check.globs {
     if glob_match(glob, value) {

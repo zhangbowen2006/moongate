@@ -1,5 +1,5 @@
 import {
-  "zhangbowen2006/airlock",
+  "zhangbowen2006/moongate",
 }
 
 options(
@@ -11,6 +11,8 @@ options(
         "server_line",
         "resolve_approval",
         "close",
+        "guard_create",
+        "guard_check",
         "tick",
         "verify",
         "report",
