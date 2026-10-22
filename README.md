@@ -4,7 +4,7 @@
 
 核心决策引擎用 MoonBit 实现，同一套代码可编译到 JavaScript / Wasm。仓库自带已编译引擎，**不装 MoonBit 也能直接运行演示**。
 
-- 在线演示/报告样例：`runs/demo.report.html`（运行演示后生成）
+- 报告样例：[examples/report.sample.html](examples/report.sample.html)（由一次真实运行生成，可直接打开）
 - 驳回意见逐条回应：[docs/REVIEW-RESPONSE.md](docs/REVIEW-RESPONSE.md)
 - 验收自查对照：[docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)
 - 策略语法：[docs/POLICY.md](docs/POLICY.md) · 信任边界：[docs/SEMANTICS.md](docs/SEMANTICS.md)
