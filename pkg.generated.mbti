@@ -1,0 +1,224 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "zhangbowen2006/airlock"
+
+// Values
+pub fn advertise_tool(Policy, String) -> Bool
+
+pub fn any_glob(Array[String], String) -> Bool
+
+pub fn bool_field(Json, String, fallback? : Bool) -> Bool
+
+pub fn call_digest(String, Json) -> String
+
+pub fn capability_args(String, Json?) -> Json
+
+pub fn capability_name(String) -> String
+
+pub fn checks_match(Array[ArgCheck], Json) -> Bool
+
+pub fn client_line(Session, String, Int64) -> Array[Json]
+
+pub fn close_session(Session, Int64) -> Json
+
+pub fn collect_strings(Json) -> Array[String]
+
+pub fn error_response(Json?, Int32, String, Json?) -> Json
+
+pub fn expire_approvals(Session, Int64) -> Array[Json]
+
+pub fn extract_tokens(String, Int32) -> Array[SecretToken]
+
+pub fn find_taint(Map[String, TaintSource], Array[String], Int32) -> Array[TaintHit]
+
+pub fn fingerprint_of(String) -> String
+
+pub fn glob_match(String, String) -> Bool
+
+pub fn hex_uint(UInt32, width? : Int32) -> String
+
+pub fn id_key(Json?) -> String
+
+pub fn int_field(Json, String) -> Int32?
+
+pub fn is_egress(Policy, String) -> Bool
+
+pub fn is_passthrough_method(String) -> Bool
+
+pub fn is_sensitive(Policy, String, Json) -> Bool
+
+pub fn json_arr(Array[Json]) -> Json
+
+pub fn json_as_array(Json) -> Array[Json]?
+
+pub fn json_as_bool(Json) -> Bool?
+
+pub fn json_as_int(Json) -> Int32?
+
+pub fn json_as_object(Json) -> Map[String, Json]?
+
+pub fn json_as_string(Json) -> String?
+
+pub fn json_bool(Bool) -> Json
+
+pub fn json_canonical(Json) -> String
+
+pub fn json_depth(Json) -> Int32
+
+pub fn json_get(Json, String) -> Json?
+
+pub fn json_i64(Int64) -> Json
+
+pub fn json_int(Int32) -> Json
+
+pub fn json_null() -> Json
+
+pub fn json_obj(Array[(String, Json)]) -> Json
+
+pub fn json_parse_opt(String) -> Json?
+
+pub fn json_render(Json) -> String
+
+pub fn json_str(String) -> Json
+
+pub fn json_strings(Array[String]) -> Json
+
+pub fn match_rule(Policy, String, Json) -> RuleHit?
+
+pub fn new_session(String, Policy) -> Session
+
+pub fn open_session(Session, Int64) -> Json
+
+pub fn parse_policy(String) -> Policy raise PolicyError
+
+pub fn parse_rpc(Json) -> RpcMessage?
+
+pub fn report_ledger(Array[String]) -> Json
+
+pub fn resolve_approval(Session, String, Bool, Int64) -> Array[Json]
+
+pub fn result_response(Json?, Json) -> Json
+
+pub fn scan_fingerprints(Array[String], Int32) -> Array[SecretToken]
+
+pub fn server_line(Session, String, Int64) -> Array[Json]
+
+pub fn sha256_hex(String) -> String
+
+pub fn sha256_hex_bytes(BytesView) -> String
+
+pub fn string_array(Json) -> Array[String]
+
+pub fn string_field(Json, String) -> String?
+
+pub fn taint_source(String, String, String) -> TaintSource
+
+pub fn tool_name_of(Json?) -> String?
+
+pub fn verify_ledger(Array[String]) -> Json
+
+// Errors
+pub suberror PolicyError {
+  PolicyError(String)
+}
+
+// Types and methods
+pub struct ArgCheck {
+  arg : String
+  globs : Array[String]
+  prefixes : Array[String]
+  negate : Bool
+}
+
+type Inflight
+
+type PendingApproval
+
+pub struct Policy {
+  name : String
+  digest : String
+  default_decision : String
+  rules : Array[Rule]
+  sensitive : Array[SensitiveRule]
+  egress_tools : Array[String]
+  on_taint : String
+  rate : RateLimit
+  approval_ttl_ms : Int32
+  min_secret_len : Int32
+  hide_denied : Bool
+}
+
+pub struct RateLimit {
+  window_ms : Int32
+  max_calls : Int32
+}
+
+pub struct RpcMessage {
+  raw : Json
+  id : Json?
+  has_id : Bool
+  verb : String?
+  params : Json?
+  result : Json?
+  error : Json?
+}
+
+pub struct Rule {
+  id : String
+  tool : String
+  decision : String
+  reason : String
+  checks : Array[ArgCheck]
+  approval_ttl_ms : Int32
+}
+
+pub struct RuleHit {
+  id : String
+  decision : String
+  reason : String
+  ttl_ms : Int32
+}
+
+pub struct SecretToken {
+  fingerprint : String
+  preview : String
+}
+
+pub struct SensitiveRule {
+  id : String
+  tool : String
+  checks : Array[ArgCheck]
+}
+
+pub struct Session {
+  id : String
+  policy : Policy
+  mut seq : Int32
+  mut prev_hash : String
+  mut call_seq : Int32
+  inflight : Map[String, Inflight]
+  lists : Map[String, Bool]
+  pending : Map[String, PendingApproval]
+  taint : Map[String, TaintSource]
+  mut attempts : Array[Int64]
+  mut allowed : Int32
+  mut denied : Int32
+  mut approval_requests : Int32
+  mut forwarded : Int32
+  mut tainted_values : Int32
+}
+
+pub struct TaintHit {
+  fingerprint : String
+  preview : String
+  source : TaintSource
+}
+
+pub struct TaintSource {
+  call : String
+  tool : String
+  preview : String
+}
+
+// Type aliases
+
+// Traits
