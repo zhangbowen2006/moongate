@@ -6,6 +6,8 @@ pub fn advertise_tool(Policy, String) -> Bool
 
 pub fn any_glob(Array[String], String) -> Bool
 
+pub fn base64_encode(String) -> String
+
 pub fn bool_field(Json, String, fallback? : Bool) -> Bool
 
 pub fn call_digest(String, Json) -> String
@@ -19,6 +21,8 @@ pub fn checks_match(Array[ArgCheck], Json) -> Bool
 pub fn client_line(Session, String, Int64) -> Array[Json]
 
 pub fn close_session(Session, Int64) -> Json
+
+pub fn collapse_separators(String) -> String
 
 pub fn collect_strings(Json) -> Array[String]
 
@@ -135,6 +139,8 @@ pub fn string_field(Json, String) -> String?
 pub fn taint_source(String, String, String) -> TaintSource
 
 pub fn tool_name_of(Json?) -> String?
+
+pub fn variant_values(String) -> Array[String]
 
 pub fn verify_ledger(Array[String]) -> Json
 

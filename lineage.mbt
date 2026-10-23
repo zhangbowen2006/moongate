@@ -225,15 +225,36 @@ pub fn find_taint(
   min_len : Int32,
 ) -> Array[TaintHit] {
   let hits : Array[TaintHit] = []
-  for token in scan_fingerprints(texts, min_len) {
-    match taint.get(token.fingerprint) {
-      Some(source) =>
-        hits.push({
-          fingerprint: token.fingerprint,
-          preview: token.preview,
-          source,
-        })
-      None => ()
+  let seen : Map[String, Bool] = Map([])
+  for text in texts {
+    // As written.
+    for token in scan_fingerprints([text], min_len) {
+      match taint.get(token.fingerprint) {
+        Some(source) =>
+          push_hit(hits, seen, token.fingerprint, token.preview, source)
+        None => ()
+      }
+    }
+    // Separators removed and case folded: catches `sk-abc_123` sent as
+    // `skabc123` or `SK ABC 123`.
+    let collapsed = collapse_separators(text)
+    if collapsed != text {
+      for token in scan_fingerprints([collapsed], min_len) {
+        match taint.get(token.fingerprint) {
+          Some(source) =>
+            push_hit(hits, seen, token.fingerprint, token.preview, source)
+          None => ()
+        }
+      }
+    }
+    // Base64-shaped runs: catches a secret that was encoded before leaving.
+    for run in scan_base64_like(text) {
+      let fingerprint = fingerprint_of(run)
+      match taint.get(fingerprint) {
+        Some(source) =>
+          push_hit(hits, seen, fingerprint, run[0:4].to_owned() + "…", source)
+        None => ()
+      }
     }
   }
   hits
@@ -362,4 +383,165 @@ pub fn placeholders_in(value : Json) -> Array[String] {
     }
   }
   unique
+}
+
+///|
+fn to_lower_ascii(ch : Char) -> Char {
+  if ch >= 'A' && ch <= 'Z' {
+    (ch.to_int() + 32).unsafe_to_char()
+  } else {
+    ch
+  }
+}
+
+///|
+/// Drop separators and fold case, so `sk-abc_123`, `SK ABC 123` and
+/// `skabc123` all collapse to the same string. A secret that is split or
+/// re-cased before leaving still matches the collapsed view.
+pub fn collapse_separators(text : String) -> String {
+  let out = StringBuilder()
+  for ch in text {
+    if ch == '-' ||
+      ch == '_' ||
+      ch == '.' ||
+      ch == ':' ||
+      ch == '/' ||
+      ch == ' ' ||
+      ch == '\t' ||
+      ch == '\n' {
+      continue
+    }
+    out.write_string(to_lower_ascii(ch).to_string())
+  }
+  out.to_string()
+}
+
+///|
+fn base64_char(value : Int32) -> Char {
+  if value < 26 {
+    (65 + value).unsafe_to_char()
+  } else if value < 52 {
+    (97 + value - 26).unsafe_to_char()
+  } else if value < 62 {
+    (48 + value - 52).unsafe_to_char()
+  } else if value == 62 {
+    '+'
+  } else {
+    '/'
+  }
+}
+
+///|
+/// Standard Base64 for the ASCII token shapes the scanner accepts.
+pub fn base64_encode(text : String) -> String {
+  let chars = text.to_array()
+  let len = chars.length()
+  let out = StringBuilder()
+  let mut i = 0
+  while i + 2 < len {
+    let a = chars[i].to_int() & 255
+    let b = chars[i + 1].to_int() & 255
+    let c = chars[i + 2].to_int() & 255
+    out.write_string(base64_char(a >> 2).to_string())
+    out.write_string(base64_char(((a & 3) << 4) | (b >> 4)).to_string())
+    out.write_string(base64_char(((b & 15) << 2) | (c >> 6)).to_string())
+    out.write_string(base64_char(c & 63).to_string())
+    i += 3
+  }
+  let rest = len - i
+  if rest == 1 {
+    let a = chars[i].to_int() & 255
+    out.write_string(base64_char(a >> 2).to_string())
+    out.write_string(base64_char((a & 3) << 4).to_string())
+    out.write_string("==")
+  } else if rest == 2 {
+    let a = chars[i].to_int() & 255
+    let b = chars[i + 1].to_int() & 255
+    out.write_string(base64_char(a >> 2).to_string())
+    out.write_string(base64_char(((a & 3) << 4) | (b >> 4)).to_string())
+    out.write_string(base64_char((b & 15) << 2).to_string())
+    out.write_string("=")
+  }
+  out.to_string()
+}
+
+///|
+pub fn base64_urlsafe(text : String) -> String {
+  base64_encode(text)
+  .replace_all(old="+", new="-")
+  .replace_all(old="/", new="_")
+}
+
+///|
+/// Encoded forms a secret can take on the way out. The gateway stores the
+/// fingerprint of each form when the secret is first seen, so a later call
+/// that carries any of them is still recognised as the same value.
+pub fn variant_values(value : String) -> Array[String] {
+  let out : Array[String] = []
+  let collapsed = collapse_separators(value)
+  if collapsed != value && collapsed.length() >= 6 {
+    out.push(collapsed)
+  }
+  if value.length() >= 8 {
+    out.push(base64_encode(value))
+    out.push(base64_urlsafe(value))
+  }
+  out
+}
+
+///|
+fn is_base64_char(ch : Char) -> Bool {
+  (ch >= 'A' && ch <= 'Z') ||
+  (ch >= 'a' && ch <= 'z') ||
+  (ch >= '0' && ch <= '9') ||
+  ch == '+' ||
+  ch == '/' ||
+  ch == '='
+}
+
+///|
+/// Runs that look like Base64 and are long enough to be an encoded secret.
+/// Requiring alignment and a digit keeps ordinary words out.
+fn scan_base64_like(text : String) -> Array[String] {
+  let out : Array[String] = []
+  let chars = text.to_array()
+  let len = chars.length()
+  let mut i = 0
+  while i < len {
+    if is_base64_char(chars[i]) {
+      let start = i
+      let mut digit = false
+      while i < len && is_base64_char(chars[i]) {
+        let ch = chars[i]
+        if ch >= '0' && ch <= '9' {
+          digit = true
+        }
+        i += 1
+      }
+      let run = text[start:i].to_owned()
+      if digit && run.length() >= 12 && run.length() % 4 == 0 {
+        out.push(run)
+      }
+    } else {
+      i += 1
+    }
+  }
+  out
+}
+
+///|
+fn push_hit(
+  hits : Array[TaintHit],
+  seen : Map[String, Bool],
+  fingerprint : String,
+  preview : String,
+  source : TaintSource,
+) -> Unit {
+  // The same secret may be recognised through several views (as written,
+  // collapsed, Base64). They all point at one source, so report it once.
+  let key = source.call + "|" + source.tool + "|" + source.preview
+  if !seen.contains(key) {
+    seen.set(key, true)
+    hits.push({ fingerprint, preview, source, })
+  }
 }

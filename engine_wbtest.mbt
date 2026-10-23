@@ -148,7 +148,7 @@ test "blocked calls never reach upstream and carry lineage evidence" {
   )
   let tainted = server_line(session, read_result, 1003L)
   collect_ledger(tainted, ledger)
-  inspect(session.taint.length(), content="1")
+  inspect(session.tainted_values, content="1")
 
   let egress = client_line(
     session,

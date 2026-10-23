@@ -411,7 +411,16 @@ fn remember_raw(
   let mut count = 0
   for raw in raws {
     if !session.taint.contains(raw.fingerprint) {
-      session.taint.set(raw.fingerprint, taint_source(call, tool, raw.preview))
+      let source = taint_source(call, tool, raw.preview)
+      session.taint.set(raw.fingerprint, source)
+      // Remember encoded and collapsed forms too, so a later call carrying a
+      // Base64 or split/re-cased copy is still recognised as the same value.
+      for variant in variant_values(raw.value) {
+        let fingerprint = fingerprint_of(variant)
+        if !session.taint.contains(fingerprint) {
+          session.taint.set(fingerprint, source)
+        }
+      }
       count += 1
     }
     if !session.vault.contains(raw.fingerprint) {
