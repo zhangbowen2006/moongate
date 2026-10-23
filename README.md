@@ -71,7 +71,7 @@ Agent ──stdio──▶ MoonGate 网关 ──stdio──▶ MCP Server ─�
 - 替换规则与工具规则分开：允许调用某个工具，不等于允许它看见密钥。
 - 服务端 guard 遇到未解析的占位符直接拒绝，避免绕过网关后把占位符当参数执行。
 
-它不试图理解语义，只做精确值替换；边界写在 [SEMANTICS.md](docs/SEMANTICS.md)。
+它不试图理解语义，但对拆分、改大小写与常见编码做归一化匹配；边界写在 [SEMANTICS.md](docs/SEMANTICS.md)。
 
 ## 五分钟运行
 
@@ -108,7 +108,7 @@ node bin/moongate.mjs report --ledger runs/demo.jsonl
 
 ```sh
 moon check --deny-warn
-moon test --deny-warn       # 42 个单元测试
+moon test --deny-warn       # 47 个单元测试
 node scripts/build.mjs
 node --test test/*.test.mjs # 18 个 Node 测试
 ```
@@ -252,7 +252,7 @@ hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 
 ## 工程证据
 
-- `moon test --deny-warn`：42 个单元测试（策略顺序、血缘误报、路径规范化、guard、替身替换、审批一次性、账本篡改）
+- `moon test --deny-warn`：47 个单元测试（策略顺序、血缘误报、路径规范化、guard、替身替换、审批一次性、账本篡改、变形外泄）
 - `node --test`：18 个 Node 测试（10 个进程测试 + 2 个 MoonPod 兼容层测试 + 6 个材料校验测试）
 - `interop/`：官方 SDK 客户端 + 官方 filesystem 服务端，4/4 通过
 - Mooncakes：`moon add zhangbowen2006/moongate@0.6.1`，已在空工程中安装并调用 `guard_decision` 验证
@@ -264,7 +264,7 @@ hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 - 服务端没有嵌入 guard 时，绕过网关就失去保护；不是沙箱
 - 替身只覆盖工具结果里的字符串叶子；如果明文从别的通道进入上下文，不会被替换
 - 替换目标由策略决定，策略写错就会把密钥发给错误的人
-- 血缘与替身都是精确值匹配，编码、分片、改写可绕过
+- 血缘对拆分、改大小写、Base64/URL-safe 编码做了归一化匹配；任意加密、压缩或语义改写仍可绕过
 - 路径规范化是词法的，不解析符号链接
 - 审批台无身份认证，只适合单机
 - 只实现 stdio 传输；多服务端模式只合并 tools
