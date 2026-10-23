@@ -18,6 +18,7 @@ const HELP = `moongate — in-path policy and data-provenance gateway for MCP ag
 
 Usage
   moongate run --policy <file> [--ledger <file>] [--port <n>] [--no-ui] -- <upstream command...>
+  moongate run --policy <file> --http [port] -- node <server entry> [args...]
   moongate serve --policy <file> -- node <server entry> [args...]
   moongate check --policy <file>
   moongate verify --ledger <file> [--json]
@@ -29,8 +30,11 @@ Examples
   moongate run --policy examples/policy.workspace.json -- node demo/server.mjs
   moongate run --policy examples/policy.workspace.json -- npx -y @modelcontextprotocol/server-filesystem ./workspace
   moongate serve --policy examples/policy.filesystem.json -- node node_modules/@modelcontextprotocol/server-filesystem/dist/index.js ./workspace
+  moongate run --policy examples/policy.workspace.json --http 8787 -- node demo/server.mjs
 
 run puts a gateway in front of the server (client must be pointed at it).
+With --http the gateway listens on /mcp and speaks Streamable HTTP (POST for
+messages, GET for the SSE stream) instead of stdio.
 serve leaves the client and server untouched: it starts the server with an
 in-process guard, so the same policy is enforced inside the server itself.
 
@@ -96,7 +100,19 @@ async function commandRun(argv) {
     ui: flags['no-ui'] !== true,
     cwd: process.cwd(),
   };
-  if (flags.servers) {
+  if (flags.http) {
+    if (flags.servers) fail('--http currently supports one -- <command> upstream, not --servers');
+    if (!rest.length) fail('--http requires an upstream command after --');
+    const { runHttpGateway } = await import('../src/http.mjs');
+    const httpPort = Number(flags.http);
+    await runHttpGateway({
+      ...common,
+      command: rest[0],
+      args: rest.slice(1),
+      port: Number.isFinite(httpPort) && httpPort > 0 ? httpPort : 8787,
+      ui: false,
+    });
+  } else if (flags.servers) {
     const config = JSON.parse(readFileSync(resolve(flags.servers), 'utf8'));
     if (!Array.isArray(config.servers) || config.servers.length === 0) {
       fail('--servers file must contain { "servers": [ ... ] }');

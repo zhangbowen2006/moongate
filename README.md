@@ -8,6 +8,7 @@
 **密钥替身。** 敏感值在进入模型上下文之前被替换成 `«mg:…»` 占位符；只有策略显式允许的目的地，网关才会在转发前换回真值。模型可以“使用”密钥，但从未看见它。
 
 - 零改造适配现有服务端：用官方 `@modelcontextprotocol/server-filesystem` 验证，拦截发生在服务端进程内，副作用没有发生
+- stdio 与 Streamable HTTP 两种传输，同一套判定
 - 一个网关可带多个 MCP 服务端，跨进程血缘成立
 - 策略、值级血缘、会话配额、一次性审批、哈希链账本，判定全部发生在执行之前
 - 核心用 MoonBit 写，已发布到 [Mooncakes](https://mooncakes.io/docs/zhangbowen2006/moongate)；可编译到 JavaScript / Wasm
@@ -110,7 +111,7 @@ node bin/moongate.mjs report --ledger runs/demo.jsonl
 moon check --deny-warn
 moon test --deny-warn       # 47 个单元测试
 node scripts/build.mjs
-node --test test/*.test.mjs # 18 个 Node 测试
+node --test test/*.test.mjs # 20 个 Node 测试
 ```
 
 ## 作为 MoonBit 库使用
@@ -253,7 +254,7 @@ hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 ## 工程证据
 
 - `moon test --deny-warn`：47 个单元测试（策略顺序、血缘误报、路径规范化、guard、替身替换、审批一次性、账本篡改、变形外泄）
-- `node --test`：18 个 Node 测试（10 个进程测试 + 2 个 MoonPod 兼容层测试 + 6 个材料校验测试）
+- `node --test`：20 个 Node 测试（10 个进程测试 + 2 个 HTTP 传输 + 2 个 MoonPod 兼容层测试 + 6 个材料校验测试）
 - `interop/`：官方 SDK 客户端 + 官方 filesystem 服务端，4/4 通过
 - Mooncakes：`moon add zhangbowen2006/moongate@0.6.1`，已在空工程中安装并调用 `guard_decision` 验证
 - 申报材料校验：`npm run check:submission -- SUBMISSION.md`，6 个测试覆盖格式/披露/场景数量
@@ -267,7 +268,7 @@ hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 - 血缘对拆分、改大小写、Base64/URL-safe 编码做了归一化匹配；任意加密、压缩或语义改写仍可绕过
 - 路径规范化是词法的，不解析符号链接
 - 审批台无身份认证，只适合单机
-- 只实现 stdio 传输；多服务端模式只合并 tools
+- HTTP 传输实现了 Streamable HTTP 的 POST/GET，未覆盖旧版 HTTP+SSE；多服务端模式只合并 tools
 
 完整威胁模型与失败模式：[docs/SEMANTICS.md](docs/SEMANTICS.md)。
 
