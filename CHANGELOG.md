@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.0 — 2026-10-24
+
+面向「现有 MCP 生态」的一次实质扩展：不改服务端代码就能保护它，并补上变形外泄与 HTTP 传输。
+
+### 新增
+
+- `moongate serve --policy <file> -- node <entry>`：Node `--import` loader 在服务端进程内拦截 `tools/call`，服务端源码零修改；已用官方 `@modelcontextprotocol/server-filesystem` 验证 `write_file` 被拒且目标文件未创建
+- Streamable HTTP 传输：`run --http [port]` 在 `/mcp` 提供 POST（单条 JSON-RPC）与 GET（SSE 流），同一套引擎判定
+- 变形外泄检测：拆分隔符、改大小写、Base64、URL-safe Base64 归一化匹配
+- 新增 `test/http.test.mjs`（2 项）、`variant_wbtest.mbt`（5 项）
+
+### 变更
+
+- 主叙事从「双点执行」改为「零改造的 MCP 执行边界」：第二执行点不再要求服务端主动集成
+- 47 个 MoonBit 单元测试、20 个 Node 测试
+
 ## 0.6.1 — 2026-10-22
 
 修复与文档校准，不引入新能力。
