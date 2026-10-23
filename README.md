@@ -13,7 +13,7 @@
 - 策略、值级血缘、会话配额、一次性审批、哈希链账本，判定全部发生在执行之前
 - 核心用 MoonBit 写，已发布到 [Mooncakes](https://mooncakes.io/docs/zhangbowen2006/moongate)；可编译到 JavaScript / Wasm
 
-[报告样例](examples/report.sample.html) · [English](README.en.md) · [架构](docs/ARCHITECTURE.md) · [策略语法](docs/POLICY.md) · [信任边界](docs/SEMANTICS.md) · [驳回意见回应](docs/REVIEW-RESPONSE.md) · [同类项目对照](docs/OVERLAP.md) · [自查](docs/SELF-AUDIT.md)
+[报告样例](examples/report.sample.html) · [English](README.en.md) · [架构](docs/ARCHITECTURE.md) · [策略语法](docs/POLICY.md) · [信任边界](docs/SEMANTICS.md) · [对 10-23 驳回的回应](docs/REJECTION-2026-10-23.md) · [同类项目对照](docs/OVERLAP.md) · [自查](docs/SELF-AUDIT.md)
 
 ---
 
@@ -42,19 +42,36 @@ Mooncakes 上已有 `yadidyc/moonpod`（通用策略核心，含预算/审批/�
 
 如果只用一个代理，MoonGate 和上面几个项目能力接近；零改造的服务端内执行与密钥替身是它存在的理由。这一点写在 [REVIEW-RESPONSE](docs/REVIEW-RESPONSE.md) 里，没有回避。
 
-## 两个执行点
+## 零改造的服务端内执行
 
 ```
-Agent ──stdio──▶ MoonGate 网关 ──stdio──▶ MCP Server ──▶ 文件 / 网络 / 数据库
-                     │                        │
-                     │ 判定 1                 │ 判定 2（内嵌 guard）
-                     │ 策略 + 血缘 + 审批      │ 同一份策略，硬拒绝
-                     └────────────────────────┘
+客户端 ──stdio / HTTP──▶ 现有 MCP 服务端 ──▶ 文件 / 网络 / 数据库
+                              │
+                              │ 工具函数执行前
+                              │ 同一份 MoonBit 策略
+                              └─ deny 直接返回，副作用不发生
 ```
 
-演示里有一个专门的场景：**绕过网关，直接用客户端连服务端**，调用 `fs.delete` 和 `reports/../../etc/passwd`。两次都被服务端自己的 guard 拒绝，文件仍然存在。
+`moongate serve` 用 Node 的 `--import` 在服务端模块之前装上 loader，拦截官方 SDK 的 `tools/call` 注册。**服务端源码不改一行，客户端配置不用动。**
 
-网关负责有状态的部分：跨调用的数据血缘、人工审批、密钥替身、账本。服务端 guard 负责无状态的硬规则：禁用工具、路径逃逸、默认拒绝、未解析的占位符。
+用官方 filesystem server 复现：
+
+```sh
+cd interop && npm install --no-audit --no-fund
+node guard-check.mjs /tmp/mgfs
+```
+
+实测输出：
+
+```
+[moongate] zero-touch guard active: 8 rule(s)
+list_directory -> allowed: true
+write_file -> blocked: Blocked by MoonGate policy (no-write)
+side effect present: false
+RESULT: guard works
+```
+
+需要状态的判定（跨调用血缘、人工审批、密钥替身、账本）在网关里做；无状态的硬拒绝在服务端进程内做。两者共用同一份 `.mbt`。
 
 ## 密钥替身
 
@@ -170,9 +187,17 @@ node bin/moongate.mjs check --policy runs/imported.json
 
 支持的字段、明确的失败关闭项与语义差异见 [docs/MOONPOD.md](docs/MOONPOD.md)。这不是依赖或 fork：MoonGate 不引用 MoonPod 代码，输出仍是普通的 MoonGate 策略。
 
-## 两种接入方式
+## 三种接入方式
 
-### 1. 作为网关（任何 MCP 客户端）
+### 1. 零改造：启动现有服务端（推荐）
+
+```sh
+moongate serve --policy policy.json -- node /abs/path/server.js [args...]
+```
+
+服务端源码和客户端配置都不变，判定在服务端进程内执行。目前覆盖 Node 实现的 MCP 服务端。
+
+### 2. 作为网关：把客户端指过来
 
 把客户端配置里的启动命令换成 `moongate run ... -- <原命令>`：
 
@@ -195,7 +220,9 @@ node bin/moongate.mjs check --policy runs/imported.json
 
 被拒绝的调用返回 `-32001`，带规则、原因和血缘证据；被保护的返回值是占位符。
 
-### 2. 作为服务端内的守卫（第二执行点）
+需要 HTTP 时加 `--http <port>`，网关在 `/mcp` 上提供 Streamable HTTP（POST 传消息、GET 开 SSE）。
+
+### 3. 显式嵌入库（可选）
 
 ```js
 import * as gate from 'moongate/dist/engine.js';
