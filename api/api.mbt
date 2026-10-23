@@ -294,7 +294,7 @@ pub fn version() -> String {
   @moongate.json_render(
     @moongate.json_obj([
       ("name", @moongate.json_str("moongate")),
-      ("version", @moongate.json_str("0.6.0")),
+      ("version", @moongate.json_str("0.7.1")),
       ("schema", @moongate.json_int(1)),
     ]),
   )

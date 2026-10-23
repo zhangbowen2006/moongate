@@ -1,9 +1,10 @@
 {
   "name": "moongate",
-  "version": "0.7.0",
+  "version": "0.7.1",
+  "author": "zhangbowen2006",
   "private": true,
   "type": "module",
-  "description": "Dual-point policy enforcement for MCP tools (gateway + in-server guard)",
+  "description": "Zero-touch policy enforcement for existing MCP servers (in-process guard + gateway)",
   "engines": {
     "node": ">=22"
   },

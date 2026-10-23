@@ -36,7 +36,7 @@ moon search security --json --limit 15
 | 项目 | 它做什么 | MoonGate 的不同 |
 | --- | --- | --- |
 | MCP Shield | 策略、密钥脱敏、跨工具外泄链、审批、哈希链审计 | 单代理；MoonGate 增加服务端第二执行点与 MCP 边界的可逆替身 |
-| MCPKernel / MCPGuard | 策略、污点、沙箱、签名审计 | MoonGate 不做沙箱；差异在双点执行与替身 |
+| MCPKernel / MCPGuard | 策略、污点、沙箱、签名审计 | MoonGate 不做沙箱；差异在零改造的服务端内执行与替身 |
 | mcp-firewall | 策略、审批、哈希链、仪表盘 | 同上 |
 | taintMCP | 输出污点标记、来源追踪、首匹配策略 | MoonGate 把替身与审批也纳入同一条数据流 |
 | AgentPerms | 录制会话后推断最小权限 | MoonGate 不做策略推断；做运行时执行与跨服务端路由 |
@@ -55,4 +55,4 @@ moon search security --json --limit 15
 - 只要通用策略判定：用 `yadidyc/moonpod` 或 `eisem/moon_policy` 更合适。
 - 只要写 MCP 服务端：用 `colmugx/mcp`。
 - 只要离线脱敏：用 `moon_scrub`。
-- 要在 MCP 边界做执行前拦截、密钥替身与双点执行：用 MoonGate。
+- 要在 MCP 边界做执行前拦截、密钥替身与零改造的服务端内执行：用 MoonGate。

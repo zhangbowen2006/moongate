@@ -1,4 +1,4 @@
-# MoonGate（月门）：MCP 工具的双点执行边界
+# MoonGate（月门）：现有 MCP 服务端的零改造执行边界
 
 > **填写说明（提交前删除本段）**
 > 1. 每个小节都要由本人用自己的话写，不能保留括号里的提示。
@@ -30,7 +30,7 @@
 
 ## 核心功能
 
-- 双点执行：网关转发前判定，服务端工具函数入口再判一次。
+- 零改造服务端内执行：`moongate serve` 启动现有服务端，工具函数执行前判定，服务端源码不改。
 - 密钥替身：结果中的敏感值变成 `«mg:…»`，按 `reveal` 规则在授权目的地换回真值。
 - 跨服务端：合并工具清单、按归属路由，血缘跨进程。
 - 配额与审批：调用数、参数字节、替换次数；一次性审批绑定参数摘要。
@@ -53,6 +53,6 @@
 ## 仓库与安装
 
 - GitHub：https://github.com/zhangbowen2006/moongate
-- Mooncakes：`moon add zhangbowen2006/moongate@0.7.0`
+- Mooncakes：`moon add zhangbowen2006/moongate@0.7.1`
 - 运行演示：`node demo/run.mjs`
 - 验证账本：`node bin/moongate.mjs verify --ledger runs/demo.jsonl`

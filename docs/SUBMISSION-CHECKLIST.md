@@ -32,7 +32,7 @@ git log --format='%B' | grep -ci 'co-authored-by'
 
 ## 3. 仓库与差异披露
 
-- [ ] 仓库 public，README 首屏能看到“双点执行 / 密钥替身 / 与现有方案的关系”。
+- [ ] 仓库 public，README 首屏能看到“零改造 / 密钥替身 / 与现有方案的关系”。
 - [ ] `docs/OVERLAP.md` 存在，点名 MoonPod、MoonPolicy、MCP Shield 等，并声明无代码复用。
 - [ ] `docs/registry-scan.json` 是最近一次 `moon search` 的结果。
 - [ ] 没有把别人的仓库、提交或代码并进来。
@@ -51,7 +51,7 @@ node --test test/*.test.mjs
 ```sh
 mkdir -p /tmp/mg-check && cd /tmp/mg-check
 # 建一个空 moon.mod 后：
-moon add zhangbowen2006/moongate@0.7.0
+moon add zhangbowen2006/moongate@0.7.1
 ```
 
 - [ ] 账本校验通过：`node bin/moongate.mjs verify --ledger runs/demo.jsonl`。

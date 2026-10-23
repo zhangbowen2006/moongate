@@ -111,13 +111,13 @@ node bin/moongate.mjs report --ledger runs/demo.jsonl
 moon check --deny-warn
 moon test --deny-warn       # 47 个单元测试
 node scripts/build.mjs
-node --test test/*.test.mjs # 20 个 Node 测试
+node --test test/*.test.mjs # 21 个 Node 测试
 ```
 
 ## 作为 MoonBit 库使用
 
 ```sh
-moon add zhangbowen2006/moongate@0.7.0
+moon add zhangbowen2006/moongate@0.7.1
 ```
 
 ```moonbit
@@ -254,9 +254,9 @@ hash_n = SHA-256(prev_hash + "\n" + canonical(event_without_hash))
 ## 工程证据
 
 - `moon test --deny-warn`：47 个单元测试（策略顺序、血缘误报、路径规范化、guard、替身替换、审批一次性、账本篡改、变形外泄）
-- `node --test`：20 个 Node 测试（10 个进程测试 + 2 个 HTTP 传输 + 2 个 MoonPod 兼容层测试 + 6 个材料校验测试）
+- `node --test`：21 个 Node 测试（10 个进程测试 + 2 个 HTTP 传输 + 2 个 MoonPod 兼容层测试 + 6 个材料校验测试 + 1 个版本一致性测试）
 - `interop/`：官方 SDK 客户端 + 官方 filesystem 服务端，4/4 通过
-- Mooncakes：`moon add zhangbowen2006/moongate@0.7.0`，已在空工程中安装并调用 `guard_decision` 验证
+- Mooncakes：`moon add zhangbowen2006/moongate@0.7.1`，已在空工程中安装并调用 `guard_decision` 验证
 - 申报材料校验：`npm run check:submission -- SUBMISSION.md`，6 个测试覆盖格式/披露/场景数量
 - CI：Linux / macOS / Windows 三平台，含演示与互操作
 

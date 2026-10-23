@@ -4,23 +4,25 @@
 
 ## 结论
 
-- 仓库 `zhangbowen2006/moongate` 的 **36 个提交**，作者与提交者全部是 `zhangbowen2006 <310127449+zhangbowen2006@users.noreply.github.com>`。
+- 仓库 `zhangbowen2006/moongate` 的 **44 个提交**，作者与提交者全部是 `zhangbowen2006`。其中 43 个使用 GitHub noreply 邮箱 `310127449+zhangbowen2006@users.noreply.github.com`，1 个（`e39373e`）使用一个 qq 邮箱（完整地址见 `git log`）；两个邮箱都登记在同一个 GitHub 账号下，不是两个人。
 - 没有 `Co-authored-by`、`Signed-off-by` 或其他账号的提交。
 - Mooncakes 模块 `zhangbowen2006/moongate` 的发布者同为 `zhangbowen2006`。
 - 本项目为独立开发，没有把其他同学的仓库、提交或账号并入。
 
-## 审计记录（2026-10-22）
+## 审计记录（2026-10-24）
 
 ```text
-commits=36
+commits=44
 first=2026-10-22
-last=2026-10-22
+last=2026-10-24
 
 authors:
-zhangbowen2006 <310127449+zhangbowen2006@users.noreply.github.com>
+zhangbowen2006 <qq-mail>                      (1 commit: e39373e)
+zhangbowen2006 <310127449+zhangbowen2006@users.noreply.github.com>  (43 commits)
 
 committers:
-zhangbowen2006 <310127449+zhangbowen2006@users.noreply.github.com>
+zhangbowen2006 <qq-mail>                      (1 commit)
+zhangbowen2006 <310127449+zhangbowen2006@users.noreply.github.com>  (43 commits)
 
 coauthor_trailers=0
 
@@ -33,14 +35,15 @@ zhangbowen2006
 
 ```sh
 git rev-list --count HEAD
-git log --format='%an <%ae>' | sort -u
+git log --format='%an' | sort -u                      # 只有 zhangbowen2006
+git log --format='%ae' | sort -u                      # 两个邮箱，同一个账号
 git log --format='%cn <%ce>' | sort -u
 git log --format='%B' | grep -ci 'co-authored-by'
 git config --local user.name
 git config --local user.email
 ```
 
-预期：作者/提交者各只有一行 `zhangbowen2006`，`co-authored-by` 计数为 0。
+预期：作者名只有 `zhangbowen2006` 一个；邮箱有 noreply 与 qq 两个，均属同一账号；`co-authored-by` 计数为 0。
 
 ## 需要主动说明的两点
 

@@ -47,7 +47,7 @@ node bin/moongate.mjs import-policy \
 ## 什么时候用
 
 - 已经在 MoonPod 里维护了策略，想直接用到 MCP 边界；
-- 想用 MoonPod 的通用策略语言，同时获得 MoonGate 的替身/血缘/双点执行；
+- 想用 MoonPod 的通用策略语言，同时获得 MoonGate 的替身/血缘/服务端内执行；
 - 需要把 MoonPod 的策略作为基线，再在 MoonGate 里加 `reveal`、`sensitive` 等 MCP 专属规则。
 
 如果只需要通用策略判定，直接用 MoonPod 即可；MoonGate 不试图替代它。
