@@ -6,7 +6,9 @@
 // reasoning happens in the MoonBit engine; this file is argv handling and
 // file I/O.
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { spawn } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { loadEngine, projectRoot } from '../src/engine.mjs';
 import { runGateway } from '../src/gateway.mjs';
 import { runMultiGateway } from '../src/multi.mjs';
@@ -16,6 +18,7 @@ const HELP = `moongate — in-path policy and data-provenance gateway for MCP ag
 
 Usage
   moongate run --policy <file> [--ledger <file>] [--port <n>] [--no-ui] -- <upstream command...>
+  moongate serve --policy <file> -- node <server entry> [args...]
   moongate check --policy <file>
   moongate verify --ledger <file> [--json]
   moongate report --ledger <file> [--out <file.html>] [--policy <file>]
@@ -25,6 +28,11 @@ Usage
 Examples
   moongate run --policy examples/policy.workspace.json -- node demo/server.mjs
   moongate run --policy examples/policy.workspace.json -- npx -y @modelcontextprotocol/server-filesystem ./workspace
+  moongate serve --policy examples/policy.filesystem.json -- node node_modules/@modelcontextprotocol/server-filesystem/dist/index.js ./workspace
+
+run puts a gateway in front of the server (client must be pointed at it).
+serve leaves the client and server untouched: it starts the server with an
+in-process guard, so the same policy is enforced inside the server itself.
 
 The gateway speaks MCP over stdio. Point any MCP client at this command instead
 of the upstream server; denied calls never reach the server.
@@ -230,11 +238,31 @@ async function commandVersion() {
   console.log(engine.version());
 }
 
+async function commandServe(argv) {
+  const { flags, rest } = parseFlags(argv);
+  if (!flags.policy) fail('serve requires --policy <file>');
+  if (rest.length === 0) fail('serve requires a server command after --');
+  const [program, ...args] = rest;
+  const base = program.split(/[\\/]/).pop().toLowerCase();
+  if (base !== 'node' && base !== 'node.exe') {
+    fail('serve wraps servers launched with node; use: moongate serve --policy p.json -- node <entry.js>');
+  }
+  const loader = pathToFileURL(resolve(projectRoot, 'src/guard-loader.mjs')).href;
+  const env = { ...process.env, MOONGATE_POLICY: resolve(flags.policy) };
+  const child = spawn(program, ['--import', loader, ...args], { stdio: 'inherit', env });
+  child.on('exit', (code, signal) => {
+    process.exit(code === null ? (signal ? 1 : 0) : code);
+  });
+}
+
 const [command, ...rest] = process.argv.slice(2);
 try {
   switch (command) {
     case 'run':
       await commandRun(rest);
+      break;
+    case 'serve':
+      await commandServe(rest);
       break;
     case 'check':
       await commandCheck(rest);

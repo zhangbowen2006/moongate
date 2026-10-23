@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "name": "filesystem-guard",
+  "default_decision": "deny",
+  "rules": [
+    { "id": "read", "tool": "read_*", "decision": "allow" },
+    { "id": "list", "tool": "list_*", "decision": "allow" },
+    { "id": "tree", "tool": "directory_tree", "decision": "allow" },
+    { "id": "info", "tool": "get_file_info", "decision": "allow" },
+    { "id": "search", "tool": "search_files", "decision": "allow" },
+    { "id": "no-write", "tool": "write_file", "decision": "deny", "reason": "writes are disabled for this agent" },
+    { "id": "no-edit", "tool": "edit_file", "decision": "deny", "reason": "edits are disabled for this agent" },
+    { "id": "no-move", "tool": "move_file", "decision": "deny", "reason": "moves are disabled for this agent" }
+  ]
+}

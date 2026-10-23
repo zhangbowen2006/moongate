@@ -62,3 +62,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Run interop checks
         run: node interop/client.mjs
+      - name: Zero-touch guard against the official filesystem server
+        run: |
+          mkdir -p /tmp/mgfs
+          echo hello > /tmp/mgfs/note.txt
+          node interop/guard-check.mjs /tmp/mgfs

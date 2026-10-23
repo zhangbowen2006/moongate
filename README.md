@@ -3,13 +3,13 @@
 [![CI](https://github.com/zhangbowen2006/moongate/actions/workflows/ci.yml/badge.svg)](https://github.com/zhangbowen2006/moongate/actions/workflows/ci.yml)
 [![Mooncakes](https://img.shields.io/badge/mooncakes-zhangbowen2006%2Fmoongate-dfed86)](https://mooncakes.io/docs/zhangbowen2006/moongate)
 
-**MCP 工具的双点执行边界。** 同一套 MoonBit 判定核心，既跑在网关进程里，也能被 MCP 服务端直接嵌入：网关被绕过时，服务端自己仍然会拒绝。
+**零改造的 MCP 执行边界。** 不改服务端一行代码：`moongate serve --policy p.json -- node <server entry>` 启动现有 MCP 服务端，同一套 MoonBit 策略就在服务端进程内、工具函数执行前生效。客户端不需要指向新地址，服务端不需要引入新依赖。
 
 **密钥替身。** 敏感值在进入模型上下文之前被替换成 `«mg:…»` 占位符；只有策略显式允许的目的地，网关才会在转发前换回真值。模型可以“使用”密钥，但从未看见它。
 
+- 零改造适配现有服务端：用官方 `@modelcontextprotocol/server-filesystem` 验证，拦截发生在服务端进程内，副作用没有发生
 - 一个网关可带多个 MCP 服务端，跨进程血缘成立
 - 策略、值级血缘、会话配额、一次性审批、哈希链账本，判定全部发生在执行之前
-- 第二执行点是一个几十行的嵌入调用，不需要改协议、不需要模型配合
 - 核心用 MoonBit 写，已发布到 [Mooncakes](https://mooncakes.io/docs/zhangbowen2006/moongate)；可编译到 JavaScript / Wasm
 
 [报告样例](examples/report.sample.html) · [English](README.en.md) · [架构](docs/ARCHITECTURE.md) · [策略语法](docs/POLICY.md) · [信任边界](docs/SEMANTICS.md) · [驳回意见回应](docs/REVIEW-RESPONSE.md) · [同类项目对照](docs/OVERLAP.md) · [自查](docs/SELF-AUDIT.md)
@@ -35,11 +35,11 @@ Mooncakes 上已有 `yadidyc/moonpod`（通用策略核心，含预算/审批/�
 
 **MoonGate 不是第一个策略网关，也不声称发明这些机制。** 我们的差异是结构性的：
 
-1. **双点执行**：上面这些方案都是一个代理进程。代理被绕过（客户端直连服务端、服务端被别的进程调用、配置写错）就没有保护。MoonGate 把同一份策略编译进服务端，在工具函数执行前再判一次。
+1. **零改造的服务端内执行**：上面这些方案都是一个代理进程，必须把客户端指过去；代理被绕过（客户端直连服务端、配置写错）就没有保护。MoonGate 用 Node loader 在服务端进程内注入判定，服务端源码不变，工具函数执行前就拦下。
 2. **在工具调用边界做密钥替身**：凭据代理通常在 HTTP 出口替换 header；MoonGate 在 MCP 的 `tools/call` 参数与工具结果里做替换，占位符可以跨工具流转，替换目标由策略逐条授权。模型上下文里始终没有明文。
 3. **MoonBit 单核多后端**：网关与服务端 guard 共用一套 `.mbt`；同一份代码发布为 Mooncakes 库，可编译到 JS/Wasm。
 
-如果只用一个代理，MoonGate 和上面几个项目能力接近；第二执行点与密钥替身是它存在的理由。这一点写在 [REVIEW-RESPONSE](docs/REVIEW-RESPONSE.md) 里，没有回避。
+如果只用一个代理，MoonGate 和上面几个项目能力接近；零改造的服务端内执行与密钥替身是它存在的理由。这一点写在 [REVIEW-RESPONSE](docs/REVIEW-RESPONSE.md) 里，没有回避。
 
 ## 两个执行点
 
