@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-22T20:34:52+08:00",
+  "generated_at": "2026-10-24T11:53:21+08:00",
   "tool": "moon search --json (Mooncakes registry)",
   "keywords": [
     "mcp",
@@ -12,8 +12,8 @@
   "modules": [
     {
       "name": "moonbit-community/proton_keepawake",
-      "version": "0.5.1",
-      "downloads": 23667,
+      "version": "0.6.0",
+      "downloads": 23809,
       "description": "Native keep-awake guards for MoonBit on Windows, Linux, and macOS.",
       "repository": "https://github.com/moonbit-community/proton/tree/main/sys/keepawake",
       "matched_by": [
@@ -21,19 +21,9 @@
       ]
     },
     {
-      "name": "justjavac/keepawake",
-      "version": "0.1.4",
-      "downloads": 6126,
-      "description": "Native keep-awake guards for MoonBit on Windows, Linux, and macOS.",
-      "repository": "https://github.com/justjavac/moonbit-keepawake",
-      "matched_by": [
-        "guard"
-      ]
-    },
-    {
       "name": "colmugx/mcp",
-      "version": "0.18.1",
-      "downloads": 5936,
+      "version": "0.18.2",
+      "downloads": 6402,
       "description": "Type-safe MCP SDK in MoonBit with server/client support and dual transport (STDIO/HTTP)",
       "repository": "https://github.com/colmugx/mcp.mbt",
       "matched_by": [
@@ -41,9 +31,19 @@
       ]
     },
     {
+      "name": "justjavac/keepawake",
+      "version": "0.1.4",
+      "downloads": 6131,
+      "description": "Native keep-awake guards for MoonBit on Windows, Linux, and macOS.",
+      "repository": "https://github.com/justjavac/moonbit-keepawake",
+      "matched_by": [
+        "guard"
+      ]
+    },
+    {
       "name": "moonbit-community/keepawake",
       "version": "0.1.14",
-      "downloads": 1904,
+      "downloads": 1908,
       "description": "Native keep-awake guards for MoonBit on Windows, Linux, and macOS.",
       "repository": "https://github.com/moonbit-community/proton/tree/main/sys/keepawake",
       "matched_by": [
@@ -53,7 +53,7 @@
     {
       "name": "mizchi/bit_bootstrap",
       "version": "0.48.0",
-      "downloads": 418,
+      "downloads": 435,
       "description": "Native-stub bootstrap helpers (stdio guard)",
       "repository": "https://github.com/mizchi/bit-vcs",
       "matched_by": [
@@ -63,7 +63,7 @@
     {
       "name": "gaato/discord",
       "version": "0.13.0",
-      "downloads": 219,
+      "downloads": 250,
       "description": "An experimental Discord library for MoonBit: native/JS/Wasm REST, interactions, and gateway bots. Voice is in gaato/discord_voice.",
       "repository": "https://github.com/gaato/discord.mbt",
       "matched_by": [
@@ -73,7 +73,7 @@
     {
       "name": "marianoguerra/mcp",
       "version": "0.10.1",
-      "downloads": 206,
+      "downloads": 240,
       "description": "MCP 2026-07-28 protocol types, JSON-RPC codec and SEP-2243 header validation. No dependencies.",
       "repository": "https://github.com/marianoguerra/mcp-mb",
       "matched_by": [
@@ -83,7 +83,7 @@
     {
       "name": "wzzc-dev/moui_agent_mcp",
       "version": "0.2.2",
-      "downloads": 193,
+      "downloads": 202,
       "description": "MCP JSON-RPC router and stdio transport exposing a MoUI AgentHost to external agents",
       "repository": "",
       "matched_by": [
@@ -92,9 +92,9 @@
     },
     {
       "name": "mldong/moon-token",
-      "version": "0.1.15",
-      "downloads": 133,
-      "description": "DDD-layered login-state and session toolkit for MoonBit: multi-device sessions, access/refresh rotation, exact logout reasons (kicked / superseded / expired never collapse into one error), permission and role checks, route guard for web handlers",
+      "version": "0.1.17",
+      "downloads": 168,
+      "description": "DDD-layered login-state and session toolkit for MoonBit: multi-device sessions, access/refresh rotation, exact logout reasons (kicked / superseded / expired never collapse into one error), permission ",
       "repository": "https://github.com/mldong/moon-token",
       "matched_by": [
         "guard"
@@ -103,7 +103,7 @@
     {
       "name": "marianoguerra/mcp-client",
       "version": "0.10.1",
-      "downloads": 131,
+      "downloads": 152,
       "description": "MCP 2026-07-28 client: streamable-HTTP and stdio transports, MRTR, subscriptions and the tasks extension.",
       "repository": "https://github.com/marianoguerra/mcp-mb",
       "matched_by": [
@@ -113,7 +113,7 @@
     {
       "name": "marianoguerra/mcp-inspector",
       "version": "0.10.1",
-      "downloads": 118,
+      "downloads": 136,
       "description": "Session, capability state and mcp.json catalog handling for MCP debugging tools.",
       "repository": "https://github.com/marianoguerra/mcp-mb",
       "matched_by": [
@@ -123,7 +123,7 @@
     {
       "name": "marianoguerra/mcp-server",
       "version": "0.10.1",
-      "downloads": 112,
+      "downloads": 134,
       "description": "Define MCP 2026-07-28 servers: a side-effect-free routing core, tools/resources/prompts, and a transport trait. Depends only on marianoguerra/mcp.",
       "repository": "https://github.com/marianoguerra/mcp-mb",
       "matched_by": [
@@ -131,9 +131,19 @@
       ]
     },
     {
+      "name": "123123213weqw/moon_scrub",
+      "version": "0.5.2",
+      "downloads": 130,
+      "description": "Offline sensitive-data detection, redaction, JSON and streaming pipelines for MoonBit applications.",
+      "repository": "https://github.com/yyqdbngt/moon-scrub",
+      "matched_by": [
+        "security"
+      ]
+    },
+    {
       "name": "minie135/moon-audit",
       "version": "0.5.0-dev",
-      "downloads": 111,
+      "downloads": 120,
       "description": "Static security scanner for MoonBit projects",
       "repository": "https://github.com/I3eg1nner/moon-audit",
       "matched_by": [
@@ -142,29 +152,9 @@
       ]
     },
     {
-      "name": "123123213weqw/moon_scrub",
-      "version": "0.5.2",
-      "downloads": 96,
-      "description": "Offline sensitive-data detection, redaction, JSON and streaming pipelines for MoonBit applications.",
-      "repository": "https://github.com/yyqdbngt/moon-scrub",
-      "matched_by": [
-        "security"
-      ]
-    },
-    {
-      "name": "marianoguerra/mcp-server-native",
-      "version": "0.10.1",
-      "downloads": 94,
-      "description": "Native transports for MCP 2026-07-28 servers: stdio and streamable HTTP with SSE.",
-      "repository": "https://github.com/marianoguerra/mcp-mb",
-      "matched_by": [
-        "mcp"
-      ]
-    },
-    {
       "name": "mldong/moon-token-moonback",
-      "version": "0.1.15",
-      "downloads": 90,
+      "version": "0.1.17",
+      "downloads": 115,
       "description": "moonback adapter for moon-token: per-route authentication middleware, request principal in context, route permission policy wiring, and HTTP status (or envelope) mapping for failures",
       "repository": "https://github.com/mldong/moon-token",
       "matched_by": [
@@ -172,9 +162,19 @@
       ]
     },
     {
+      "name": "marianoguerra/mcp-server-native",
+      "version": "0.10.1",
+      "downloads": 113,
+      "description": "Native transports for MCP 2026-07-28 servers: stdio and streamable HTTP with SSE.",
+      "repository": "https://github.com/marianoguerra/mcp-mb",
+      "matched_by": [
+        "mcp"
+      ]
+    },
+    {
       "name": "ChenJiasen-123/mb-secure-stream",
       "version": "0.2.0",
-      "downloads": 77,
+      "downloads": 81,
       "description": "MoonBit cryptography and JWT gateway with experimental libsodium-compatible secretstream authenticated encryption and independent interoperability tests.",
       "repository": "https://github.com/ChenJiasen-123/mb-secure-stream",
       "matched_by": [
@@ -184,7 +184,7 @@
     {
       "name": "FidollarinLA/moon_api_guard",
       "version": "0.6.1",
-      "downloads": 77,
+      "downloads": 81,
       "description": "Public API compatibility checks for MoonBit packages.",
       "repository": "https://github.com/FidollarinLA/moon_api_guard",
       "matched_by": [
@@ -192,9 +192,29 @@
       ]
     },
     {
+      "name": "marianoguerra/mcp-inspector-cli",
+      "version": "0.10.1",
+      "downloads": 80,
+      "description": "One-shot command-line MCP client for the 2026-07-28 protocol era.",
+      "repository": "https://github.com/marianoguerra/mcp-mb",
+      "matched_by": [
+        "mcp"
+      ]
+    },
+    {
+      "name": "marianoguerra/mcp-slack",
+      "version": "0.10.1",
+      "downloads": 77,
+      "description": "A Slack MCP server for the 2026-07-28 era, built on marianoguerra/mcp-server. Runs against an in-process mock workspace with no Slack account, or against real Slack with a token.",
+      "repository": "https://github.com/marianoguerra/mcp-mb",
+      "matched_by": [
+        "mcp"
+      ]
+    },
+    {
       "name": "cogna-dev/mcp-sdk",
       "version": "0.1.0",
-      "downloads": 74,
+      "downloads": 75,
       "description": "MoonBit implementation of the Model Context Protocol (MCP)",
       "repository": "https://github.com/cogna-dev/mcp-sdk",
       "matched_by": [
@@ -204,18 +224,8 @@
     {
       "name": "marianoguerra/mcp-bsky",
       "version": "0.10.1",
-      "downloads": 67,
+      "downloads": 73,
       "description": "A Bluesky MCP server for the 2026-07-28 era, built on marianoguerra/mcp-server and marianoguerra/atproto. Reads the public AT Protocol AppView with no account and no token; posts with an app password.",
-      "repository": "https://github.com/marianoguerra/mcp-mb",
-      "matched_by": [
-        "mcp"
-      ]
-    },
-    {
-      "name": "marianoguerra/mcp-inspector-cli",
-      "version": "0.10.1",
-      "downloads": 66,
-      "description": "One-shot command-line MCP client for the 2026-07-28 protocol era.",
       "repository": "https://github.com/marianoguerra/mcp-mb",
       "matched_by": [
         "mcp"
@@ -224,7 +234,7 @@
     {
       "name": "bzhangui/hooklab",
       "version": "0.3.0-rc.5",
-      "downloads": 65,
+      "downloads": 69,
       "description": "Self-hosted webhook security and reliable event-delivery platform in MoonBit.",
       "repository": "https://github.com/bzhangui/hooklab",
       "matched_by": [
@@ -232,20 +242,10 @@
       ]
     },
     {
-      "name": "marianoguerra/mcp-slack",
-      "version": "0.10.1",
-      "downloads": 64,
-      "description": "A Slack MCP server for the 2026-07-28 era, built on marianoguerra/mcp-server. Runs against an in-process mock workspace with no Slack account, or against real Slack with a token.",
-      "repository": "https://github.com/marianoguerra/mcp-mb",
-      "matched_by": [
-        "mcp"
-      ]
-    },
-    {
       "name": "chenzehaoo/moon_guard",
       "version": "0.1.11",
-      "downloads": 55,
-      "description": "MoonGuard is a pure-MoonBit supply chain security toolchain providing Ed25519 package signing and verification, SHA-256 manifest integrity checks, JSON+PEM trusted key management, Levenshtein and homoglyph typosquat detection, CVSS-style cumulative risk scores, JSON security reports, and a `moon_guard` CLI with subcommands for keygen, sign, verify, trust, typosquat, manifest, hash, audit, and version. Includes a runnable end-to-end audit example at `examples/basic_audit`. MoonGuard 是用纯 MoonBit 实现的 MoonBit 包供应链安全工具链，提供 Ed25519 签名、SHA-256 清单、JSON+PEM 可信密钥管理、Levenshtein 与同形（homoglyph）双模式 typosquat 检测、CVSS 风格风险评分、JSON 安全报告与 9 子命令 CLI。",
+      "downloads": 60,
+      "description": "MoonGuard is a pure-MoonBit supply chain security toolchain providing Ed25519 package signing and verification, SHA-256 manifest integrity checks, JSON+PEM trusted key management, Levenshtein and homo",
       "repository": "https://github.com/chenzehaoo/MoonGUARD",
       "matched_by": [
         "guard",
@@ -255,7 +255,7 @@
     {
       "name": "conglinyizhi/better-edit-tools-mcp",
       "version": "0.1.1",
-      "downloads": 51,
+      "downloads": 55,
       "description": "MoonBit MCP file editing toolkit — atomic writes, function-scope detection, snapshot rollback, and fault-tolerant JSON parsing for AI agent toolchains.",
       "repository": "https://github.com/conglinyizhi/better-edit-tools-mcp-rebuild-moonbit",
       "matched_by": [
@@ -265,7 +265,7 @@
     {
       "name": "shiguri-01/mcp",
       "version": "0.2.0",
-      "downloads": 50,
+      "downloads": 55,
       "description": "A library for building Model Context Protocol servers and clients.",
       "repository": "https://github.com/shiguri-01/mcp.mbt",
       "matched_by": [
@@ -275,7 +275,7 @@
     {
       "name": "trkbt10/llm_interop",
       "version": "0.3.0",
-      "downloads": 44,
+      "downloads": 51,
       "description": "Unified LLM protocol abstraction for MoonBit — multi-provider support with streaming, tool calling, and protocol translation",
       "repository": "https://github.com/trkbt10/llm_interop",
       "matched_by": [
@@ -283,19 +283,9 @@
       ]
     },
     {
-      "name": "emptist/ibmoonjs",
-      "version": "0.2.7",
-      "downloads": 43,
-      "description": "JavaScript/Node.js target of ibmoon - MoonBit wrapper for IB TWS/Gateway API with JavaScript FFI socket implementation",
-      "repository": "https://github.com/emptist/ibmoonjs",
-      "matched_by": [
-        "gateway"
-      ]
-    },
-    {
       "name": "oyjh0381/moonmime",
       "version": "0.3.1",
-      "downloads": 43,
+      "downloads": 50,
       "description": "Byte-preserving MIME security, gateway, and forensic infrastructure",
       "repository": "https://github.com/oyjh0381/MoonMIME",
       "matched_by": [
@@ -304,9 +294,19 @@
       ]
     },
     {
+      "name": "emptist/ibmoonjs",
+      "version": "0.2.7",
+      "downloads": 44,
+      "description": "JavaScript/Node.js target of ibmoon - MoonBit wrapper for IB TWS/Gateway API with JavaScript FFI socket implementation",
+      "repository": "https://github.com/emptist/ibmoonjs",
+      "matched_by": [
+        "gateway"
+      ]
+    },
+    {
       "name": "Milky2018/guardch",
       "version": "0.1.0",
-      "downloads": 41,
+      "downloads": 43,
       "description": "",
       "repository": "",
       "matched_by": [
@@ -316,7 +316,7 @@
     {
       "name": "BeiLaDuo/cidr-audit",
       "version": "0.1.2",
-      "downloads": 36,
+      "downloads": 43,
       "description": "Audit IPv4 CIDR allow/deny rules for overlap, shadowing, and risky network ranges in pure MoonBit",
       "repository": "https://github.com/BeiLaDuo/mooncidr-audit",
       "matched_by": [
@@ -326,7 +326,7 @@
     {
       "name": "Noverberrain/moonmodguard",
       "version": "0.3.0",
-      "downloads": 36,
+      "downloads": 40,
       "description": "A MoonBit project manifest and supply-chain policy auditor.",
       "repository": "https://gitlink.org.cn/Wyc060514/moonmodguard",
       "matched_by": [
@@ -334,39 +334,9 @@
       ]
     },
     {
-      "name": "clhhhhh/moon-csv-lite",
-      "version": "0.1.0",
-      "downloads": 32,
-      "description": "A MoonBit CSV quality toolkit for auditing, contracts, gates, and chart previews.",
-      "repository": "https://github.com/clhhhhhh/moon-csv-lite",
-      "matched_by": [
-        "audit"
-      ]
-    },
-    {
-      "name": "emptist/ibmoonwa",
-      "version": "0.1.0",
-      "downloads": 32,
-      "description": "MoonBit wrapper for Interactive Brokers TWS/Gateway API with WebAssembly FFI socket implementation",
-      "repository": "https://github.com/emptist/ibmoonwa",
-      "matched_by": [
-        "gateway"
-      ]
-    },
-    {
-      "name": "123123213weqw/moonbit_mcp",
-      "version": "0.1.0",
-      "downloads": 30,
-      "description": "A MoonBit SDK for the Model Context Protocol (MCP). Build MCP servers and clients in MoonBit.",
-      "repository": "https://github.com/123123213weqw/moonbit_mcp",
-      "matched_by": [
-        "mcp"
-      ]
-    },
-    {
       "name": "sujy123456/lunasieve",
       "version": "0.1.0",
-      "downloads": 30,
+      "downloads": 37,
       "description": "Streaming sensitive-data detection and redaction engine for MoonBit",
       "repository": "https://github.com/sujy123456/my",
       "matched_by": [
@@ -376,7 +346,7 @@
     {
       "name": "PingGuoMiaoMiao/MoonRoute",
       "version": "0.1.3",
-      "downloads": 29,
+      "downloads": 36,
       "description": "AI model routing, governance, and resilience infrastructure for MoonBit",
       "repository": "https://github.com/PingGuoMiaoMiao/MoonRoute.git",
       "matched_by": [
@@ -384,9 +354,61 @@
       ]
     },
     {
+      "name": "zlhahaha/partsieve",
+      "version": "0.4.0-spike",
+      "downloads": 36,
+      "description": "OOXML capability audit and verified rebuild; restricted Word and spreadsheet profiles",
+      "repository": "https://github.com/zlhahaha/partsieve.git",
+      "matched_by": [
+        "audit"
+      ]
+    },
+    {
+      "name": "123123213weqw/moonbit_mcp",
+      "version": "0.1.0",
+      "downloads": 35,
+      "description": "A MoonBit SDK for the Model Context Protocol (MCP). Build MCP servers and clients in MoonBit.",
+      "repository": "https://github.com/123123213weqw/moonbit_mcp",
+      "matched_by": [
+        "mcp"
+      ]
+    },
+    {
+      "name": "mhlagent/sheetsentry",
+      "version": "0.4.1",
+      "downloads": 34,
+      "description": "Calculation slicing and model audit for Excel files, written in MoonBit.",
+      "repository": "https://github.com/mhlagent/sheetsentry",
+      "matched_by": [
+        "audit"
+      ]
+    },
+    {
+      "name": "zhangbowen2006/moongate",
+      "version": "0.7.1",
+      "downloads": 33,
+      "description": "Dual-point policy enforcement and secret stand-ins for MCP tools, in one MoonBit core.",
+      "repository": "https://github.com/zhangbowen2006/moongate",
+      "matched_by": [
+        "policy",
+        "gateway",
+        "security"
+      ]
+    },
+    {
+      "name": "emptist/ibmoonwa",
+      "version": "0.1.0",
+      "downloads": 33,
+      "description": "MoonBit wrapper for Interactive Brokers TWS/Gateway API with WebAssembly FFI socket implementation",
+      "repository": "https://github.com/emptist/ibmoonwa",
+      "matched_by": [
+        "gateway"
+      ]
+    },
+    {
       "name": "hhxhhx78/moonbit-iec104",
       "version": "0.3.1",
-      "downloads": 27,
+      "downloads": 33,
       "description": "Portable IEC 60870-5-104 protocol core for SCADA, gateways, and deterministic simulation.",
       "repository": "https://github.com/hhxhhx78/moonbit-iec104",
       "matched_by": [
@@ -394,9 +416,19 @@
       ]
     },
     {
+      "name": "qyt1234567/moonbit-modbus",
+      "version": "0.2.2",
+      "downloads": 31,
+      "description": "A portable Modbus RTU, ASCII, and TCP protocol stack with device simulation and gateway primitives for MoonBit.",
+      "repository": "https://github.com/qyt1234567/moonbit-modbus",
+      "matched_by": [
+        "gateway"
+      ]
+    },
+    {
       "name": "LMK-ai-nb/permscope",
       "version": "0.1.3",
-      "downloads": 26,
+      "downloads": 30,
       "description": "Audit Permissions-Policy browser capability boundaries in MoonBit.",
       "repository": "https://github.com/LMK-ai-nb/permscope.git",
       "matched_by": [
@@ -405,50 +437,9 @@
       ]
     },
     {
-      "name": "emptist/ibmoonc",
-      "version": "0.1.0",
-      "downloads": 26,
-      "description": "MoonBit wrapper for Interactive Brokers TWS/Gateway API with C/Native FFI socket implementation",
-      "repository": "https://github.com/emptist/ibmoonc",
-      "matched_by": [
-        "gateway"
-      ]
-    },
-    {
-      "name": "qyt1234567/moonbit-modbus",
-      "version": "0.2.2",
-      "downloads": 26,
-      "description": "A portable Modbus RTU, ASCII, and TCP protocol stack with device simulation and gateway primitives for MoonBit.",
-      "repository": "https://github.com/qyt1234567/moonbit-modbus",
-      "matched_by": [
-        "gateway"
-      ]
-    },
-    {
-      "name": "jhshuai/moonpolicykit",
-      "version": "0.2.0",
-      "downloads": 25,
-      "description": "A backend-neutral, explainable relationship-based authorization toolkit for MoonBit.",
-      "repository": "https://github.com/jhshuai/MoonPolicyKit",
-      "matched_by": [
-        "policy"
-      ]
-    },
-    {
-      "name": "llgllg/moontrustflow",
-      "version": "0.1.0",
-      "downloads": 23,
-      "description": "A lightweight MoonBit Policy-as-Code toolkit for trusted flow governance, boundary rules, and explainable compliance reports.",
-      "repository": "https://www.gitlink.org.cn/lllglllg/MoonTrustFlow",
-      "matched_by": [
-        "policy",
-        "security"
-      ]
-    },
-    {
       "name": "vectie/moongate",
       "version": "0.1.3",
-      "downloads": 23,
+      "downloads": 30,
       "description": "MoonBit-native local proxy and usage statistics gateway for the Moon suite",
       "repository": "https://github.com/vectie/moongate",
       "matched_by": [
@@ -456,39 +447,9 @@
       ]
     },
     {
-      "name": "vicTop-cw/mcpconftest",
-      "version": "0.8.0",
-      "downloads": 22,
-      "description": "MCP protocol conformance probe — checks any MCP server (stdio or WebSocket) against the spec. 15 check categories, 4 report formats (JSON/Markdown/HTML/JUnit), per-check timing, multi-server parallel probe, CI gate, MCP stdio server + CLI (js/native).",
-      "repository": "https://github.com/VictorTop/mcpconftest",
-      "matched_by": [
-        "mcp"
-      ]
-    },
-    {
-      "name": "clbbbb/moonbit-license-audit",
-      "version": "0.1.1",
-      "downloads": 21,
-      "description": "A MoonBit license metadata auditor with SPDX expression checks.",
-      "repository": "https://github.com/clbbbb/moonbit-license-audit",
-      "matched_by": [
-        "audit"
-      ]
-    },
-    {
-      "name": "moyunijieshi1/moon-securitytxt",
-      "version": "0.1.0",
-      "downloads": 21,
-      "description": "RFC 9116 security.txt parser, validator, generator and audit toolkit for MoonBit.",
-      "repository": "https://github.com/moyunijieshi1/moon-securitytxt",
-      "matched_by": [
-        "security"
-      ]
-    },
-    {
       "name": "gaato/discord_voice",
       "version": "0.3.1",
-      "downloads": 20,
+      "downloads": 30,
       "description": "Experimental Discord voice for gaato/discord bots on MoonBit's native backend: voice gateway v8, Opus playback and receive, DAVE E2EE.",
       "repository": "https://github.com/gaato/discord.mbt",
       "matched_by": [
@@ -496,19 +457,29 @@
       ]
     },
     {
-      "name": "JJ-ai-nb/moonbit-submit-guard",
-      "version": "0.1.0",
-      "downloads": 19,
-      "description": "Audit MoonBit project readiness for hackathon submission review.",
-      "repository": "https://github.com/JJ-ai-nb/moonbit-submit-guard-clean.git",
+      "name": "jhshuai/moonpolicykit",
+      "version": "0.2.0",
+      "downloads": 29,
+      "description": "A backend-neutral, explainable relationship-based authorization toolkit for MoonBit.",
+      "repository": "https://github.com/jhshuai/MoonPolicyKit",
       "matched_by": [
-        "guard"
+        "policy"
       ]
     },
     {
-      "name": "lllg123/moontrustflow",
-      "version": "0.2.0",
-      "downloads": 19,
+      "name": "kupas/mcpbox",
+      "version": "0.1.6",
+      "downloads": 27,
+      "description": "A self-contained MCP client CLI for discovering and calling Model Context Protocol servers",
+      "repository": "https://github.com/tomasky/mcpbox",
+      "matched_by": [
+        "mcp"
+      ]
+    },
+    {
+      "name": "llgllg/moontrustflow",
+      "version": "0.1.0",
+      "downloads": 27,
       "description": "A lightweight MoonBit Policy-as-Code toolkit for trusted flow governance, boundary rules, and explainable compliance reports.",
       "repository": "https://www.gitlink.org.cn/lllglllg/MoonTrustFlow",
       "matched_by": [
@@ -517,9 +488,70 @@
       ]
     },
     {
+      "name": "emptist/ibmoonc",
+      "version": "0.1.0",
+      "downloads": 27,
+      "description": "MoonBit wrapper for Interactive Brokers TWS/Gateway API with C/Native FFI socket implementation",
+      "repository": "https://github.com/emptist/ibmoonc",
+      "matched_by": [
+        "gateway"
+      ]
+    },
+    {
+      "name": "moyunijieshi1/moon-securitytxt",
+      "version": "0.1.0",
+      "downloads": 27,
+      "description": "RFC 9116 security.txt parser, validator, generator and audit toolkit for MoonBit.",
+      "repository": "https://github.com/moyunijieshi1/moon-securitytxt",
+      "matched_by": [
+        "security"
+      ]
+    },
+    {
+      "name": "clbbbb/moonbit-license-audit",
+      "version": "0.1.1",
+      "downloads": 25,
+      "description": "A MoonBit license metadata auditor with SPDX expression checks.",
+      "repository": "https://github.com/clbbbb/moonbit-license-audit",
+      "matched_by": [
+        "audit"
+      ]
+    },
+    {
+      "name": "123123213weqw/moon_policyforge",
+      "version": "0.10.0",
+      "downloads": 23,
+      "description": "Typed rule evaluation, decision tables and explainable decisions",
+      "repository": "https://github.com/123123213weqw/moon-policyforge",
+      "matched_by": [
+        "policy"
+      ]
+    },
+    {
+      "name": "lllg123/moontrustflow",
+      "version": "0.2.0",
+      "downloads": 23,
+      "description": "A lightweight MoonBit Policy-as-Code toolkit for trusted flow governance, boundary rules, and explainable compliance reports.",
+      "repository": "https://www.gitlink.org.cn/lllglllg/MoonTrustFlow",
+      "matched_by": [
+        "policy",
+        "security"
+      ]
+    },
+    {
+      "name": "JJ-ai-nb/moonbit-submit-guard",
+      "version": "0.1.0",
+      "downloads": 23,
+      "description": "Audit MoonBit project readiness for hackathon submission review.",
+      "repository": "https://github.com/JJ-ai-nb/moonbit-submit-guard-clean.git",
+      "matched_by": [
+        "guard"
+      ]
+    },
+    {
       "name": "nkwork9999/ayatsumugi",
       "version": "0.2.0",
-      "downloads": 19,
+      "downloads": 23,
       "description": "Self-contained MoonBit UI audit and optimization core for Ayatsumugi",
       "repository": "https://github.com/nkwork9999/ayatsumugi",
       "matched_by": [
@@ -529,7 +561,7 @@
     {
       "name": "qxjhhrr/moonbit-returnplay",
       "version": "0.1.1",
-      "downloads": 19,
+      "downloads": 23,
       "description": "A deterministic and auditable return-to-sport decision framework for MoonBit.",
       "repository": "https://github.com/qxjhhrr/moonbit-returnplay",
       "matched_by": [
@@ -537,9 +569,19 @@
       ]
     },
     {
+      "name": "eisem/moon_policy",
+      "version": "0.1.0",
+      "downloads": 22,
+      "description": "A lightweight, explainable authorization policy engine for MoonBit.",
+      "repository": "https://github.com/Eisem/moon_policy",
+      "matched_by": [
+        "policy"
+      ]
+    },
+    {
       "name": "ZJH-666-ZJH/moonchange",
       "version": "0.2.1",
-      "downloads": 18,
+      "downloads": 22,
       "description": "Deterministic repository change-policy evaluation and review planning for MoonBit",
       "repository": "https://github.com/okMambaOut/moonchange",
       "matched_by": [
@@ -547,49 +589,9 @@
       ]
     },
     {
-      "name": "zlhahaha/partsieve",
-      "version": "0.2.0-spike",
-      "downloads": 18,
-      "description": "OOXML capability audit and verified rebuild; restricted Word and spreadsheet profiles",
-      "repository": "https://github.com/zlhahaha/partsieve.git",
-      "matched_by": [
-        "audit"
-      ]
-    },
-    {
-      "name": "123123213weqw/moon_policyforge",
-      "version": "0.10.0",
-      "downloads": 17,
-      "description": "Typed rule evaluation, decision tables and explainable decisions",
-      "repository": "https://github.com/123123213weqw/moon-policyforge",
-      "matched_by": [
-        "policy"
-      ]
-    },
-    {
-      "name": "HYF-ai2006/moonsec-headers",
-      "version": "0.1.0",
-      "downloads": 17,
-      "description": "MoonBit native HTTP security header and CSP audit library",
-      "repository": "https://github.com/HYF-ai2006/moonsec-headers.git",
-      "matched_by": [
-        "security"
-      ]
-    },
-    {
-      "name": "SongYZZZ/ansi-guard",
-      "version": "0.1.0",
-      "downloads": 17,
-      "description": "Audit and sanitize untrusted ANSI terminal output in pure MoonBit",
-      "repository": "https://github.com/SongYZZZ/moonansi-guard",
-      "matched_by": [
-        "guard"
-      ]
-    },
-    {
       "name": "ZYK-ai-nb/cspkit",
       "version": "0.1.0",
-      "downloads": 17,
+      "downloads": 21,
       "description": "MoonBit-native Content-Security-Policy parser, auditor, and diff toolkit.",
       "repository": "https://github.com/ZYK-ai-nb/mooncake-auditor-public.git",
       "matched_by": [
@@ -598,9 +600,29 @@
       ]
     },
     {
+      "name": "SongYZZZ/ansi-guard",
+      "version": "0.1.0",
+      "downloads": 21,
+      "description": "Audit and sanitize untrusted ANSI terminal output in pure MoonBit",
+      "repository": "https://github.com/SongYZZZ/moonansi-guard",
+      "matched_by": [
+        "guard"
+      ]
+    },
+    {
+      "name": "HYF-ai2006/moonsec-headers",
+      "version": "0.1.0",
+      "downloads": 21,
+      "description": "MoonBit native HTTP security header and CSP audit library",
+      "repository": "https://github.com/HYF-ai2006/moonsec-headers.git",
+      "matched_by": [
+        "security"
+      ]
+    },
+    {
       "name": "JM-ai-nb/mailshield",
       "version": "0.1.0",
-      "downloads": 16,
+      "downloads": 20,
       "description": "MoonBit-native DMARC and SPF policy parser with mail-domain risk scoring",
       "repository": "https://github.com/JM-ai-nb/mailshield.git",
       "matched_by": [
@@ -610,7 +632,7 @@
     {
       "name": "Jay7724/paletteguard",
       "version": "0.1.0",
-      "downloads": 16,
+      "downloads": 20,
       "description": "MoonBit palette accessibility guard for WCAG contrast reports and design-token checks.",
       "repository": "https://github.com/Jay7724/paletteguard.git",
       "matched_by": [
@@ -618,30 +640,9 @@
       ]
     },
     {
-      "name": "chenliyi-cly/mooncsp",
-      "version": "0.1.0",
-      "downloads": 15,
-      "description": "Parse, serialize, and check Content-Security-Policy headers in MoonBit",
-      "repository": "https://github.com/chenliyi-cly/mooncsp",
-      "matched_by": [
-        "policy",
-        "security"
-      ]
-    },
-    {
-      "name": "eisem/moon_policy",
-      "version": "0.1.0",
-      "downloads": 15,
-      "description": "A lightweight, explainable authorization policy engine for MoonBit.",
-      "repository": "https://github.com/Eisem/moon_policy",
-      "matched_by": [
-        "policy"
-      ]
-    },
-    {
       "name": "geniuszby/moon-policy-diff",
       "version": "0.2.0",
-      "downloads": 15,
+      "downloads": 19,
       "description": "MoonPolicy extension for finite attribute sampling, tenant invariants and release regression gates",
       "repository": "https://github.com/geniuszby/moon-policy-diff",
       "matched_by": [
@@ -649,9 +650,19 @@
       ]
     },
     {
+      "name": "yadidyc/moonpod",
+      "version": "0.2.0",
+      "downloads": 19,
+      "description": "A transport-neutral resource policy and audit engine for MoonBit hosts",
+      "repository": "https://github.com/yadidyc/moonpod",
+      "matched_by": [
+        "policy"
+      ]
+    },
+    {
       "name": "lllg123/mooncontext",
       "version": "0.2.0",
-      "downloads": 15,
+      "downloads": 19,
       "description": "A deterministic context audit tool for LLM and agent workflows",
       "repository": "https://github.com/lllg123/mooncontext",
       "matched_by": [
@@ -661,7 +672,7 @@
     {
       "name": "FidollarinLA/supervision_audit",
       "version": "0.1.0",
-      "downloads": 14,
+      "downloads": 18,
       "description": "Deterministic causal-LM supervision auditing with token-level evidence.",
       "repository": "https://github.com/FidollarinLA/supervision-audit",
       "matched_by": [
@@ -669,29 +680,9 @@
       ]
     },
     {
-      "name": "LH-DD-lh/csp-weaver-mbt",
-      "version": "0.1.0",
-      "downloads": 14,
-      "description": "MoonBit native Content-Security-Policy parser, auditor and migration planner.",
-      "repository": "https://github.com/LH-DD-lh/csp-weaver-mbt.git",
-      "matched_by": [
-        "security"
-      ]
-    },
-    {
-      "name": "yadidyc/moonpod",
-      "version": "0.2.0",
-      "downloads": 14,
-      "description": "A transport-neutral resource policy and audit engine for MoonBit hosts",
-      "repository": "https://github.com/yadidyc/moonpod",
-      "matched_by": [
-        "policy"
-      ]
-    },
-    {
       "name": "z2823253773-p/moontick",
       "version": "0.1.1",
-      "downloads": 14,
+      "downloads": 18,
       "description": "Audit a fixed-interval sampling plan against observed tick timestamps.",
       "repository": "https://github.com/z2823253773-p/moontick",
       "matched_by": [
@@ -699,9 +690,29 @@
       ]
     },
     {
+      "name": "LH-DD-lh/csp-weaver-mbt",
+      "version": "0.1.0",
+      "downloads": 18,
+      "description": "MoonBit native Content-Security-Policy parser, auditor and migration planner.",
+      "repository": "https://github.com/LH-DD-lh/csp-weaver-mbt.git",
+      "matched_by": [
+        "security"
+      ]
+    },
+    {
+      "name": "kupas/imrelay",
+      "version": "0.2.0",
+      "downloads": 17,
+      "description": "Hermes-style agent gateway in MoonBit: bridges 14 messaging platforms (Telegram, Discord, Slack, WhatsApp, Signal, Email, Home Assistant, Mattermost, Matrix, DingTalk, Feishu/Lark, WeChat, WeCom, iMes",
+      "repository": "https://github.com/tomasky/imrelay",
+      "matched_by": [
+        "gateway"
+      ]
+    },
+    {
       "name": "JingLan0v0/moonpatch",
       "version": "0.2.0",
-      "downloads": 13,
+      "downloads": 17,
       "description": "Guarded rollback receipts for RFC 6902 JSON Patch transactions in MoonBit.",
       "repository": "https://github.com/JingLan0v0/MoonPatch",
       "matched_by": [
@@ -709,30 +720,9 @@
       ]
     },
     {
-      "name": "mxz1234/moon_webhook_guard",
-      "version": "0.2.0",
-      "downloads": 12,
-      "description": "MoonBit Webhook signature verification, replay protection, idempotency, and event routing toolkit.",
-      "repository": "https://github.com/mxz1234/12312",
-      "matched_by": [
-        "guard"
-      ]
-    },
-    {
-      "name": "wcj12314/moon-flow-guard",
-      "version": "0.1.0",
-      "downloads": 12,
-      "description": "MoonFlowGuard: a MoonBit traffic-flow security audit and policy gate with PASS/REVIEW/FAIL verdicts, risk scoring and CI reports. Inputs are flow records (CSV) or decoded traffic; PCAP reading is a small built-in capability for tests, not the deliverable.",
-      "repository": "https://github.com/wcj12314/1231",
-      "matched_by": [
-        "guard",
-        "security"
-      ]
-    },
-    {
       "name": "zhangbowen2006/agentcanary",
       "version": "0.1.1",
-      "downloads": 12,
+      "downloads": 16,
       "description": "Deterministic, artifact-aware policy replay and counterfactual regression testing for AI tool traces.",
       "repository": "https://github.com/zhangbowen2006/AgentCanary",
       "matched_by": [
@@ -742,7 +732,7 @@
     {
       "name": "zkc-long/faultcanvas",
       "version": "0.1.0",
-      "downloads": 12,
+      "downloads": 16,
       "description": "Programmable HTTP fault proxy and stateful service virtualization gateway for MoonBit",
       "repository": "https://github.com/zkc-long/faultcanvas",
       "matched_by": [
@@ -750,9 +740,40 @@
       ]
     },
     {
+      "name": "mxz1234/moon_webhook_guard",
+      "version": "0.2.0",
+      "downloads": 16,
+      "description": "MoonBit Webhook signature verification, replay protection, idempotency, and event routing toolkit.",
+      "repository": "https://github.com/mxz1234/12312",
+      "matched_by": [
+        "guard"
+      ]
+    },
+    {
+      "name": "wcj12314/moon-flow-guard",
+      "version": "0.1.0",
+      "downloads": 16,
+      "description": "MoonFlowGuard: a MoonBit traffic-flow security audit and policy gate with PASS/REVIEW/FAIL verdicts, risk scoring and CI reports. Inputs are flow records (CSV) or decoded traffic; PCAP reading is a sm",
+      "repository": "https://github.com/wcj12314/1231",
+      "matched_by": [
+        "guard",
+        "security"
+      ]
+    },
+    {
+      "name": "001-Elsa/ptp-audit",
+      "version": "0.3.0",
+      "downloads": 15,
+      "description": "Bounded offline IEEE 1588-2008 PTP two-step association and scoped BMCA dataset-decision auditor.",
+      "repository": "https://github.com/001-Elsa/ptp-audit-mbt",
+      "matched_by": [
+        "audit"
+      ]
+    },
+    {
       "name": "chen-657/moon-change-window-auditor",
       "version": "0.2.0",
-      "downloads": 10,
+      "downloads": 14,
       "description": "Dependency-aware maintenance window collision auditing, change freezes, policy checks and safe-slot planning for MoonBit",
       "repository": "https://github.com/chen-657/moon-change-window-auditor",
       "matched_by": [
@@ -762,7 +783,7 @@
     {
       "name": "hua1104/moonlayout",
       "version": "0.2.0",
-      "downloads": 10,
+      "downloads": 14,
       "description": "A deterministic MoonBit graph layout quality audit and regression library.",
       "repository": "https://github.com/hua1104/moonlayout.git",
       "matched_by": [
@@ -770,39 +791,9 @@
       ]
     },
     {
-      "name": "kupas/imrelay",
-      "version": "0.2.0",
-      "downloads": 10,
-      "description": "Hermes-style agent gateway in MoonBit: bridges 14 messaging platforms (Telegram, Discord, Slack, WhatsApp, Signal, Email, Home Assistant, Mattermost, Matrix, DingTalk, Feishu/Lark, WeChat, WeCom, iMessage via BlueBubbles) into a single agent callback, with retries, chunking, typing indicators, per-chat sessions and slash commands. TOML configuration with Hermes-compatible environment-variable fallback.",
-      "repository": "https://github.com/tomasky/imrelay",
-      "matched_by": [
-        "gateway"
-      ]
-    },
-    {
-      "name": "001-Elsa/ptp-audit",
-      "version": "0.3.0",
-      "downloads": 9,
-      "description": "Bounded offline IEEE 1588-2008 PTP two-step association and scoped BMCA dataset-decision auditor.",
-      "repository": "https://github.com/001-Elsa/ptp-audit-mbt",
-      "matched_by": [
-        "audit"
-      ]
-    },
-    {
-      "name": "Suian2/roboaudit",
-      "version": "0.1.0",
-      "downloads": 9,
-      "description": "MoonBit-first auditing for robot and embodied-AI evaluation logs.",
-      "repository": "https://github.com/Suian2/RoboAudit.mbt",
-      "matched_by": [
-        "audit"
-      ]
-    },
-    {
       "name": "yyqdbngt/moon_scrub",
       "version": "0.1.0",
-      "downloads": 9,
+      "downloads": 14,
       "description": "Offline sensitive-data detection and redaction for MoonBit applications.",
       "repository": "https://github.com/yyqdbngt/moon-scrub",
       "matched_by": [
@@ -810,14 +801,23 @@
       ]
     },
     {
-      "name": "zhangbowen2006/moongate",
-      "version": "0.5.0",
-      "downloads": 5,
-      "description": "Dual-point policy enforcement and secret stand-ins for MCP tools, in one MoonBit core.",
-      "repository": "https://github.com/zhangbowen2006/moongate",
+      "name": "Suian2/roboaudit",
+      "version": "0.1.0",
+      "downloads": 13,
+      "description": "MoonBit-first auditing for robot and embodied-AI evaluation logs.",
+      "repository": "https://github.com/Suian2/RoboAudit.mbt",
       "matched_by": [
-        "policy",
-        "gateway"
+        "audit"
+      ]
+    },
+    {
+      "name": "L76148/moonrego",
+      "version": "0.1.0",
+      "downloads": 8,
+      "description": "A Rego (Open Policy Agent) lexer, parser, evaluator and CLI for MoonBit.",
+      "repository": "https://github.com/L76148/moonrego",
+      "matched_by": [
+        "policy"
       ]
     }
   ]

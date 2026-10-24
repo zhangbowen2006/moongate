@@ -1,8 +1,9 @@
 # MoonGate
 
+[![CI](https://github.com/zhangbowen2006/moongate/actions/workflows/ci.yml/badge.svg)](https://github.com/zhangbowen2006/moongate/actions/workflows/ci.yml)
 [![Mooncakes](https://img.shields.io/badge/mooncakes-zhangbowen2006%2Fmoongate-dfed86)](https://mooncakes.io/docs/zhangbowen2006/moongate)
 
-**Two enforcement points for MCP tools.** The same MoonBit policy core runs in the gateway *and* inside the MCP server, so a bypassed proxy does not mean an unprotected tool.
+**Zero-touch enforcement for MCP tools.** `moongate serve --policy p.json -- node <server entry>` starts an existing MCP server with the same MoonBit policy enforced inside the server's own process, before any tool handler runs. The server's source does not change by a line and the client config does not change at all.
 
 **Secret stand-ins.** Sensitive values become `«mg:…»` placeholders before they reach the model. Only destinations explicitly allowed by policy get the real value, substituted at forward time. The agent can use a credential without ever seeing it.
 
@@ -14,11 +15,11 @@ MCP security gateways already exist and overlap heavily: MCP Shield, MCPKernel, 
 
 MoonGate does not claim to invent those. Its difference is structural:
 
-1. **Two enforcement points.** Those projects run one proxy process. If the client connects to the server directly, or the server is invoked by something else, the proxy is out of the loop. MoonGate compiles the same policy into the server, which checks again at the tool handler.
+1. **Zero-touch in-server enforcement.** Those projects run one proxy process, and the client must be pointed at it. MoonGate injects the policy through a Node `--import` loader, so the check runs inside an existing server's process with no code change on either side.
 2. **Secret stand-ins at the tool-call boundary.** Credential brokers usually swap HTTP headers. MoonGate swaps values inside MCP arguments and tool results, so a placeholder can travel across calls and is only resolved for policy-approved destinations.
 3. **One MoonBit core, multiple deployment shapes.** The gateway and the in-server guard call the same `.mbt` code, published as a Mooncakes library; it can be built to JS/Wasm and embedded rather than requiring a Python or Node sidecar.
 
-## What the second point buys
+## What the in-server check buys
 
 ```
 Agent ──stdio──▶ MoonGate gateway ──stdio──▶ MCP server ──▶ files / network
@@ -49,9 +50,25 @@ Build from source (MoonBit 0.10.16+):
 
 ```sh
 moon check --deny-warn
-moon test --deny-warn        # 38 unit tests
+moon test --deny-warn        # 47 unit tests
 node scripts/build.mjs
-node --test test/*.test.mjs  # 10 process-level tests
+node --test test/*.test.mjs  # 21 tests incl. HTTP transport and a version-consistency check
+```
+
+## Prove zero-touch in one minute
+
+```sh
+cd interop && npm install --no-audit --no-fund
+node guard-check.mjs /tmp/mgfs
+```
+
+Against the official `@modelcontextprotocol/server-filesystem`, `write_file` is denied inside the server process and the file is never created:
+
+```
+[moongate] zero-touch guard active: 8 rule(s)
+write_file -> blocked: Blocked by MoonGate policy (no-write)
+side effect present: false
+RESULT: guard works
 ```
 
 ## Use it

@@ -249,6 +249,9 @@ async function main() {
   );
   console.log(`\n演示完成。报告：${REPORT}`);
   console.log(`账本可用以下命令复核：node bin/moongate.mjs verify --ledger ${LEDGER}`);
+  console.log('\n还想看零改造拦截（不改服务端源码）？');
+  console.log('  cd interop && npm install --no-audit --no-fund');
+  console.log('  node guard-check.mjs /tmp/mgfs');
 }
 
 main().catch((error) => {
